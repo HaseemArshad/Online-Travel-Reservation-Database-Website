@@ -23,12 +23,13 @@
 
         if (rs.next()) {
             // Successful login
-            out.println("<h1>Logged in " + rs.getString("username") +"!<h1>");
+            out.println("<h1>Successfully Logged In User: " + rs.getString("username") +"!<h1>");
             out.println("<h2>Welcome, " + rs.getString("first_name") + " " + rs.getString("last_name") + "!</h2>");
             // Set session attributes for the logged-in user
             session.setAttribute("username", username);
             session.setAttribute("userId", rs.getInt("id"));
-            out.println("<p><a href='home.jsp'>Go to Home Page</a></p>");
+          //commenting this line out for now -haseem
+        //  out.println("<p><a href='home.jsp'>Go to Home Page</a></p>");
         } else {
             // Login failed, personalized error message
             out.println("<h2>Login for username '" + username + "' failed. Please check your username and password.</h2>");
@@ -39,7 +40,7 @@
     // If the user is logged in, show the log out button
     if (session.getAttribute("username") != null) {
 %>
-        <form action="login.jsp" method="post">
+        <form action="logout.jsp" method="post">
             <input type="submit" value="Log Out" />
         </form>
 <%
