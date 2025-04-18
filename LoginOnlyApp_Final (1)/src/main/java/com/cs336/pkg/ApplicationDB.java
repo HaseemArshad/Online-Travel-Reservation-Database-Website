@@ -12,28 +12,28 @@ public class ApplicationDB {
 
 	public Connection getConnection(){
 		
-		//Create a connection string
+		//connecting to our project_schema database, local
 		String connectionUrl = "jdbc:mysql://localhost:3306/project_schema";
 		Connection connection = null;
 		
 		try {
-			//Load JDBC driver - the interface standardizing the connection procedure. Look at WEB-INF\lib for a mysql connector jar file, otherwise it fails.
+			//loading the jdbc driver first
 			Class.forName("com.mysql.jdbc.Driver").newInstance();
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
+			//catch 
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
+			//catch 
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) { 
-			// TODO Auto-generated catch block
+			//catch 
 			e.printStackTrace();
 		}
 		try {
-			//Create a connection to your DB
+			//making sure the MYSQL credentials are root, root (for our group)
 			connection = DriverManager.getConnection(connectionUrl,"root", "root");
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			//catch 
 			e.printStackTrace();
 		}
 		
@@ -45,7 +45,7 @@ public class ApplicationDB {
 		try {
 			connection.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
+			//catch 
 			e.printStackTrace();
 		}
 	}
