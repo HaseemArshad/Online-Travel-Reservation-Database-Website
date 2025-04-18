@@ -64,7 +64,7 @@
             // goign back to login page where it will welcome user
             response.sendRedirect("login.jsp");
         } else {
-        	//other error, unknown
+        	//other error, unknown error
             out.println("Unknown error occured during registration. Please try again.");
         }
     }
