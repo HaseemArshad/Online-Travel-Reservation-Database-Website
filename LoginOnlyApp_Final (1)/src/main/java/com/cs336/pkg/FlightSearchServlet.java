@@ -7,7 +7,16 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 public class FlightSearchServlet extends HttpServlet {
+
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        processRequest(request, response);
+    }
+
+    private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String tripType = request.getParameter("tripType");
         String fromAirport = request.getParameter("fromAirport").trim().toUpperCase();
         String toAirport = request.getParameter("toAirport").trim().toUpperCase();
@@ -22,7 +31,6 @@ public class FlightSearchServlet extends HttpServlet {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
-            // Handle sorting
             String orderClause = "";
             if (sortBy != null) {
                 if (sortBy.equals("duration")) {
@@ -32,7 +40,6 @@ public class FlightSearchServlet extends HttpServlet {
                 }
             }
 
-            // Departure Flights Query
             String sql = "SELECT *, TIMEDIFF(arrival_time, departure_time) AS duration FROM flights WHERE from_airport = ? AND to_airport = ? AND departure_date = ?" + orderClause;
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, fromAirport);
@@ -55,7 +62,6 @@ public class FlightSearchServlet extends HttpServlet {
                 departureFlights.add(flight);
             }
 
-            // Round Trip Logic
             if ("roundtrip".equals(tripType) && !returnDate.isEmpty()) {
                 PreparedStatement returnStmt = conn.prepareStatement(sql);
                 returnStmt.setString(1, toAirport);
@@ -84,7 +90,6 @@ public class FlightSearchServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // Pass attributes back
         request.setAttribute("departureFlights", departureFlights);
         request.setAttribute("returnFlights", returnFlights);
         request.setAttribute("tripType", tripType);

@@ -80,5 +80,7 @@
     }
     con.close();
 %>
+<p><a href="browseQA.jsp">Browse FAQs</a></p>
+
 </body>
 </html>

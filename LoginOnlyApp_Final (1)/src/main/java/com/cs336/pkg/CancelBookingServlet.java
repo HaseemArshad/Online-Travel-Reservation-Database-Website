@@ -20,29 +20,45 @@ public class CancelBookingServlet extends HttpServlet {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
-            PreparedStatement ps = conn.prepareStatement("DELETE FROM bookings WHERE booking_id = ?");
-            ps.setInt(1, bookingId);
-            int rowsDeleted = ps.executeUpdate();
+            // 1️⃣ Get booking details before deleting
+            PreparedStatement getBooking = conn.prepareStatement(
+                "SELECT user_id, flight_id FROM bookings WHERE booking_id = ?");
+            getBooking.setInt(1, bookingId);
+            ResultSet rs = getBooking.executeQuery();
 
-            conn.close();
+            if (rs.next()) {
+                int userId = rs.getInt("user_id");
+                int flightId = rs.getInt("flight_id");
 
-            if (rowsDeleted > 0) {
-                // Store success message in session for display after redirect
+                // 2️⃣ Insert into canceled_bookings
+                PreparedStatement insertCancel = conn.prepareStatement(
+                    "INSERT INTO canceled_bookings (booking_id, user_id, flight_id) VALUES (?, ?, ?)");
+                insertCancel.setInt(1, bookingId);
+                insertCancel.setInt(2, userId);
+                insertCancel.setInt(3, flightId);
+                insertCancel.executeUpdate();
+
+                // 3️⃣ Delete from bookings
+                PreparedStatement deleteBooking = conn.prepareStatement(
+                    "DELETE FROM bookings WHERE booking_id = ?");
+                deleteBooking.setInt(1, bookingId);
+                deleteBooking.executeUpdate();
+
                 request.getSession().setAttribute("message", "Booking cancelled successfully.");
             } else {
-                request.getSession().setAttribute("message", "Booking not found or already cancelled.");
+                request.getSession().setAttribute("message", "Booking not found.");
             }
+
+            conn.close();
 
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("message", "Error while cancelling booking.");
         }
 
-        // Redirect to trigger GET request and avoid 405 error
-        response.sendRedirect("viewBookings");
+        response.sendRedirect("viewBookings?filter=canceled");
     }
 
-    // Handle accidental GET requests gracefully
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.getWriter().println("❌ Wrong HTTP Method. Use POST for cancellation.");
     }

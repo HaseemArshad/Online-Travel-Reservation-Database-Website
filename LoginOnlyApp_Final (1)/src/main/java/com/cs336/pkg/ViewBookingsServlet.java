@@ -16,15 +16,35 @@ public class ViewBookingsServlet extends HttpServlet {
             return;
         }
 
+        String filter = request.getParameter("filter");
+        if (filter == null) filter = "upcoming";
+
         List<Map<String, String>> bookingsList = new ArrayList<>();
 
         try {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
-            String sql = "SELECT b.booking_id, f.airline, f.from_airport, f.to_airport, f.departure_date, f.departure_time, f.price " +
-                         "FROM bookings b JOIN flights f ON b.flight_id = f.flight_id " +
-                         "WHERE b.user_id = ?";
+            String sql = "";
+
+            if ("canceled".equals(filter)) {
+                sql = "SELECT cb.booking_id, f.airline, f.from_airport, f.to_airport, f.departure_date, f.departure_time, f.price, cb.cancel_date, cb.ticket_class " +
+                      "FROM canceled_bookings cb JOIN flights f ON cb.flight_id = f.flight_id " +
+                      "WHERE cb.user_id = ? ORDER BY cb.cancel_date DESC";
+            } else {
+                sql = "SELECT b.booking_id, f.airline, f.from_airport, f.to_airport, f.departure_date, f.departure_time, f.price, b.ticket_class " +
+                      "FROM bookings b JOIN flights f ON b.flight_id = f.flight_id " +
+                      "WHERE b.user_id = ? ";
+
+                if ("upcoming".equals(filter)) {
+                    sql += "AND f.departure_date >= CURDATE() ";
+                } else if ("past".equals(filter)) {
+                    sql += "AND f.departure_date < CURDATE() ";
+                }
+
+                sql += "ORDER BY f.departure_date ASC";
+            }
+
             PreparedStatement ps = conn.prepareStatement(sql);
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
@@ -38,6 +58,10 @@ public class ViewBookingsServlet extends HttpServlet {
                 booking.put("departure_date", rs.getString("departure_date"));
                 booking.put("departure_time", rs.getString("departure_time"));
                 booking.put("price", rs.getString("price"));
+                booking.put("ticket_class", rs.getString("ticket_class"));
+                if ("canceled".equals(filter)) {
+                    booking.put("cancel_date", rs.getString("cancel_date"));
+                }
                 bookingsList.add(booking);
             }
 
@@ -47,6 +71,7 @@ public class ViewBookingsServlet extends HttpServlet {
         }
 
         request.setAttribute("bookingsList", bookingsList);
+        request.setAttribute("currentFilter", filter);
         RequestDispatcher rd = request.getRequestDispatcher("viewBookings.jsp");
         rd.forward(request, response);
     }

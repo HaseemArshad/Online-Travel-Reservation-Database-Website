@@ -24,15 +24,12 @@
     <!-- Sort Section -->
     <div class="sort-section">
         <h3>Sort Flights</h3>
-        <form method="post" action="searchFlights">
+        <form method="get" action="searchFlights">
             <input type="hidden" name="fromAirport" value="<%= request.getAttribute("fromAirport") %>">
             <input type="hidden" name="toAirport" value="<%= request.getAttribute("toAirport") %>">
             <input type="hidden" name="departureDate" value="<%= request.getAttribute("departureDate") %>">
             <input type="hidden" name="tripType" value="<%= request.getAttribute("tripType") %>">
             <input type="hidden" name="returnDate" value="<%= request.getAttribute("returnDate") %>">
-            <input type="hidden" name="maxPrice" value="<%= request.getParameter("maxPrice") %>">
-            <input type="hidden" name="stops" value="<%= request.getParameter("stops") %>">
-            <input type="hidden" name="airline" value="<%= request.getParameter("airline") %>">
 
             Sort by:
             <select name="sortBy">
@@ -48,13 +45,12 @@
     <!-- Filter Section -->
     <div class="filter-section">
         <h3>Filter Flights</h3>
-        <form method="post" action="searchFlights">
+        <form method="get" action="searchFlights">
             <input type="hidden" name="fromAirport" value="<%= request.getAttribute("fromAirport") %>">
             <input type="hidden" name="toAirport" value="<%= request.getAttribute("toAirport") %>">
             <input type="hidden" name="departureDate" value="<%= request.getAttribute("departureDate") %>">
             <input type="hidden" name="tripType" value="<%= request.getAttribute("tripType") %>">
             <input type="hidden" name="returnDate" value="<%= request.getAttribute("returnDate") %>">
-            <input type="hidden" name="sortBy" value="<%= request.getParameter("sortBy") %>">
 
             Max Price: <input type="number" name="maxPrice" step="0.01"> 
             Stops: <input type="number" name="stops" min="0">
@@ -67,12 +63,10 @@
     <%
         List<Map<String, String>> departureFlights = (List<Map<String, String>>) request.getAttribute("departureFlights");
 
-        // Get filter values
         String maxPriceStr = request.getParameter("maxPrice");
         String stopsStr = request.getParameter("stops");
         String airlineFilter = request.getParameter("airline");
 
-        // Apply Filters
         if (maxPriceStr != null || stopsStr != null || (airlineFilter != null && !airlineFilter.isEmpty())) {
             departureFlights = departureFlights.stream().filter(flight -> {
                 boolean matches = true;
@@ -103,41 +97,16 @@
             Duration: <%= flight.get("duration") %>
             <form action="bookFlight" method="post">
                 <input type="hidden" name="flightId" value="<%= flight.get("flight_id") %>">
+                Class:
+                <select name="ticketClass" required>
+                    <option value="Economy">Economy</option>
+                    <option value="Business">Business</option>
+                    <option value="First">First</option>
+                </select>
                 <input type="submit" value="Book This Flight">
             </form>
         </div>
     <%
-            }
-        }
-
-        String tripType = (String) request.getAttribute("tripType");
-        if ("roundtrip".equals(tripType)) {
-            List<Map<String, String>> returnFlights = (List<Map<String, String>>) request.getAttribute("returnFlights");
-
-            if (returnFlights != null) {
-    %>
-        <h2>Return Flights</h2>
-    <%
-                if (returnFlights.isEmpty()) {
-                    out.println("<p>No return flights found.</p>");
-                } else {
-                    for (Map<String, String> flight : returnFlights) {
-    %>
-        <div class="flight-card">
-            <strong><%= flight.get("airline") %></strong> | 
-            <%= flight.get("from_airport") %> ➔ <%= flight.get("to_airport") %><br>
-            Date: <%= flight.get("departure_date") %> | 
-            $<%= flight.get("price") %> | 
-            Stops: <%= flight.get("stops") %> | 
-            Duration: <%= flight.get("duration") %>
-            <form action="bookFlight" method="post">
-                <input type="hidden" name="flightId" value="<%= flight.get("flight_id") %>">
-                <input type="submit" value="Book This Flight">
-            </form>
-        </div>
-    <%
-                    }
-                }
             }
         }
     %>
