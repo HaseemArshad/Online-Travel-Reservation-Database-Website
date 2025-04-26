@@ -1,13 +1,26 @@
 <%@ page import="java.sql.Connection" %>
 <%@ page import="java.sql.PreparedStatement" %>
 <%@ page import="java.sql.ResultSet" %>
+<%@ page import="java.util.*" %>
 <%@ page import="com.cs336.pkg.ApplicationDB" %>
 <html>
-<head><title>Login Result</title></head>
+<head>
+    <title>Home - Flight Reservation</title>
+</head>
 <body>
 <%
     String username = request.getParameter("username");
     String password = request.getParameter("password");
+
+    // If parameters are null, fallback to session (for back-to-home)
+    if (username == null) {
+        username = (String) session.getAttribute("username");
+    }
+
+    if (username == null) {
+        out.println("<h2>You're not logged in. <a href='login.jsp'>Login</a></h2>");
+        return;
+    }
 
     ApplicationDB db = new ApplicationDB();
     Connection con = db.getConnection();
@@ -15,29 +28,49 @@
     if (con == null) {
         out.println("Database connection failed. Please try again later.");
     } else {
-        // Query the database to check if the username and password match
-        PreparedStatement ps = con.prepareStatement("SELECT * FROM users WHERE username=? AND password=?");
-        ps.setString(1, username);
-        ps.setString(2, password);
-        ResultSet rs = ps.executeQuery();
+        PreparedStatement ps;
+        ResultSet rs = null;
 
-        if (rs.next()) {
-            // Successful login
-            out.println("<h1>Successfully Logged In User: " + rs.getString("username") +"!<h1>");
-            out.println("<h2>Welcome, " + rs.getString("first_name") + " " + rs.getString("last_name") + "!</h2>");
-            // Set session attributes for the logged-in user
-            session.setAttribute("username", username);
-            session.setAttribute("userId", rs.getInt("id"));
-          //commenting this line out for now -haseem
-        //  out.println("<p><a href='home.jsp'>Go to Home Page</a></p>");
-        } else {
-            // Login failed, personalized error message
-            out.println("<h2>Login for username '" + username + "' failed. Please check your username and password.</h2>");
-            out.println("<p><a href='login.jsp'>Try Again</a></p>");
+        if (password != null) {
+            ps = con.prepareStatement("SELECT * FROM users WHERE username=? AND password=?");
+            ps.setString(1, username);
+            ps.setString(2, password);
+            rs = ps.executeQuery();
+
+            if (rs.next()) {
+                session.setAttribute("username", username);
+                session.setAttribute("userId", rs.getInt("id"));
+            } else {
+                out.println("<h2>Login for username '" + username + "' failed. Please check your username and password.</h2>");
+                out.println("<p><a href='login.jsp'>Try Again</a></p>");
+                con.close();
+                return;
+            }
         }
+
+        // Either logged in via form or already logged in via session
+        out.println("<h1>Successfully Logged In User: " + username + "!</h1>");
+        out.println("<h2>Welcome back!</h2>");
+        out.println("<p><a href='viewBookings'>View My Bookings</a></p>");
+        
+%>
+        <!-- Flight Search Form -->
+        <form action="searchFlights" method="post">
+            <h3>Search for Flights</h3>
+            Trip Type:
+            <select name="tripType">
+                <option value="oneway">One Way</option>
+                <option value="roundtrip">Round Trip</option>
+            </select><br><br>
+            From Airport Code: <input type="text" name="fromAirport" required><br><br>
+            To Airport Code: <input type="text" name="toAirport" required><br><br>
+            Departure Date (YYYY-MM-DD): <input type="text" name="departureDate" required><br><br>
+            Return Date (YYYY-MM-DD): <input type="text" name="returnDate"><br><br>
+            <input type="submit" value="Search Flights">
+        </form>
+<%
     }
-    
-    // If the user is logged in, show the log out button
+
     if (session.getAttribute("username") != null) {
 %>
         <form action="logout.jsp" method="post">

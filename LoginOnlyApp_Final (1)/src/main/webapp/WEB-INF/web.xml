@@ -4,7 +4,49 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
          http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
          version="3.1">
+
     <welcome-file-list>
         <welcome-file>login.jsp</welcome-file>
     </welcome-file-list>
+
+    <!-- Flight Search Servlet -->
+    <servlet>
+        <servlet-name>FlightSearchServlet</servlet-name>
+        <servlet-class>com.cs336.pkg.FlightSearchServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>FlightSearchServlet</servlet-name>
+        <url-pattern>/searchFlights</url-pattern>
+    </servlet-mapping>
+
+    <!-- Book Flight Servlet -->
+    <servlet>
+        <servlet-name>BookFlightServlet</servlet-name>
+        <servlet-class>com.cs336.pkg.BookFlightServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>BookFlightServlet</servlet-name>
+        <url-pattern>/bookFlight</url-pattern>
+    </servlet-mapping>
+
+    <!-- View Bookings Servlet -->
+    <servlet>
+        <servlet-name>ViewBookingsServlet</servlet-name>
+        <servlet-class>com.cs336.pkg.ViewBookingsServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>ViewBookingsServlet</servlet-name>
+        <url-pattern>/viewBookings</url-pattern>
+    </servlet-mapping>
+
+    <!-- Cancel Booking Servlet -->
+    <servlet>
+        <servlet-name>CancelBookingServlet</servlet-name>
+        <servlet-class>com.cs336.pkg.CancelBookingServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CancelBookingServlet</servlet-name>
+        <url-pattern>/cancelBooking</url-pattern>
+    </servlet-mapping>
+
 </web-app>
