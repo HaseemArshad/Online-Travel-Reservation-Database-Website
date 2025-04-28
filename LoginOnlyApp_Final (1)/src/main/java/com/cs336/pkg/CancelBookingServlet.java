@@ -2,6 +2,7 @@ package com.cs336.pkg;
 
 import java.io.IOException;
 import java.sql.*;
+import java.util.List;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
@@ -44,6 +45,15 @@ public class CancelBookingServlet extends HttpServlet {
                 deleteBooking.setInt(1, bookingId);
                 deleteBooking.executeUpdate();
 
+                // 4️⃣ Get all users on waitlist for that flight
+                List<Integer> waitlistedUsers = db.getWaitlistedUsers(flightId);
+
+                // 5️⃣ Set seatAvailable only if users are waiting
+                if (!waitlistedUsers.isEmpty()) {
+                    HttpSession session = request.getSession();
+                    session.setAttribute("seatAvailable", flightId);
+                }
+
                 request.getSession().setAttribute("message", "Booking cancelled successfully.");
             } else {
                 request.getSession().setAttribute("message", "Booking not found.");
@@ -56,8 +66,9 @@ public class CancelBookingServlet extends HttpServlet {
             request.getSession().setAttribute("message", "Error while cancelling booking.");
         }
 
-        response.sendRedirect("viewBookings?filter=canceled");
+        response.sendRedirect("viewBookings?filter=upcoming");
     }
+    
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.getWriter().println("❌ Wrong HTTP Method. Use POST for cancellation.");

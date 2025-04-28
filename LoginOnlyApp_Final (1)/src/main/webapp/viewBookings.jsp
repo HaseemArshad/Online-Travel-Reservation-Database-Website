@@ -12,11 +12,38 @@
             border: 1px solid #ccc;
             border-radius: 6px;
         }
+        .seat-available {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            color: #155724;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
     <h2>Your Flight Bookings</h2>
+
+    <!-- ✅ Step 5: Show if there is a seat available for any waitlisted flight -->
+    <%
+        Map<Integer, Boolean> seatAvailableMap = (Map<Integer, Boolean>) request.getAttribute("seatAvailableMap");
+        if (seatAvailableMap != null && !seatAvailableMap.isEmpty()) {
+            for (Integer flightId : seatAvailableMap.keySet()) {
+    %>
+        <div class="seat-available">
+            🎉 A seat is now available for Flight ID: <%= flightId %>!
+            <form action="bookFlight.jsp" method="get" style="display:inline;">
+                <input type="hidden" name="flightId" value="<%= flightId %>">
+                <button type="submit">Book Now</button>
+            </form>
+        </div>
+    <%
+            }
+        }
+    %>
 
     <% 
         String msg = (String) session.getAttribute("message");
@@ -70,6 +97,7 @@
             Time: <%= booking.get("departure_time") %> |
             Price: $<%= booking.get("price") %> |
             Class: <%= booking.get("ticket_class") != null ? booking.get("ticket_class") : "N/A" %>
+
             <% if ("canceled".equals(currentFilter)) { %>
                 | Canceled On: <%= booking.get("cancel_date") %>
             <% } else if ("upcoming".equals(currentFilter)) { %>
