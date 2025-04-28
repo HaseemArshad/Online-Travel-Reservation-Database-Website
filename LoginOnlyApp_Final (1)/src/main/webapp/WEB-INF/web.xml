@@ -48,5 +48,14 @@
         <servlet-name>CancelBookingServlet</servlet-name>
         <url-pattern>/cancelBooking</url-pattern>
     </servlet-mapping>
+    <servlet>
+    <servlet-name>PostQuestionServlet</servlet-name>
+    <servlet-class>com.cs336.pkg.PostQuestionServlet</servlet-class>
+</servlet>
+<servlet-mapping>
+    <servlet-name>PostQuestionServlet</servlet-name>
+    <url-pattern>/postQuestion</url-pattern>
+</servlet-mapping>
+    
 
 </web-app>

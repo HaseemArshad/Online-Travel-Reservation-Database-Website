@@ -9,10 +9,9 @@
 </head>
 <body>
 <%
-	// asking for username and password from the end user
+    // Asking for username and password from the end user
     String username = request.getParameter("username");
     String password = request.getParameter("password");
-<<<<<<< HEAD
 
     // If parameters are null, fallback to session (for back-to-home)
     if (username == null) {
@@ -24,16 +23,12 @@
         return;
     }
 
-=======
-	//starting up our connection using applicationDB file (java file)
->>>>>>> fa3f73ba4eab97517f7c50722f31f99fc0c3e453
     ApplicationDB db = new ApplicationDB();
     Connection con = db.getConnection();
-	//exception if/when the database doesnt connect properly
+
     if (con == null) {
         out.println("Database connection failed. Please try again later.");
     } else {
-<<<<<<< HEAD
         PreparedStatement ps;
         ResultSet rs = null;
 
@@ -52,56 +47,33 @@
                 con.close();
                 return;
             }
-=======
-        //using SQL checks the local workbench to make sure username and password exists
-        PreparedStatement ps = con.prepareStatement("SELECT * FROM users WHERE username=? AND password=?");
-        ps.setString(1, username);
-        ps.setString(2, password);
-        ResultSet rs = ps.executeQuery();
-
-        if (rs.next()) {
-            //When the login is correct:
-            out.println("<h1>Successfully Logged In User: " + rs.getString("username") +"!<h1>");
-            out.println("<h2>Welcome, " + rs.getString("first_name") + " " + rs.getString("last_name") + "!</h2>");
-            session.setAttribute("username", username);
-            session.setAttribute("userId", rs.getInt("id"));
-          //commenting this line out for now -haseem this is just the homepage
-        //  out.println("<p><a href='home.jsp'>Go to Home Page</a></p>");
-        } else {
-            // Giving an error message for when the login doesnt work:
-            out.println("<h2>Login for username '" + username + "' failed. Make sure your username and password is correct! </h2>");
-            out.println("<p><a href='login.jsp'>Try Again</a></p>");
->>>>>>> fa3f73ba4eab97517f7c50722f31f99fc0c3e453
         }
 
         // Either logged in via form or already logged in via session
         out.println("<h1>Successfully Logged In User: " + username + "!</h1>");
         out.println("<h2>Welcome back!</h2>");
         out.println("<p><a href='viewBookings'>View My Bookings</a></p>");
-        
 %>
+
         <!-- Flight Search Form -->
-        <form action="searchFlights" method="post">
+        <form action="searchFlights" method="get">
             <h3>Search for Flights</h3>
             Trip Type:
             <select name="tripType">
                 <option value="oneway">One Way</option>
                 <option value="roundtrip">Round Trip</option>
             </select><br><br>
+
             From Airport Code: <input type="text" name="fromAirport" required><br><br>
             To Airport Code: <input type="text" name="toAirport" required><br><br>
             Departure Date (YYYY-MM-DD): <input type="text" name="departureDate" required><br><br>
             Return Date (YYYY-MM-DD): <input type="text" name="returnDate"><br><br>
             <input type="submit" value="Search Flights">
         </form>
+
 <%
     }
-<<<<<<< HEAD
 
-=======
-    
-    //when user is logged in we have a log out button 
->>>>>>> fa3f73ba4eab97517f7c50722f31f99fc0c3e453
     if (session.getAttribute("username") != null) {
 %>
         <form action="logout.jsp" method="post">
@@ -111,6 +83,7 @@
     }
     con.close();
 %>
+
 <p><a href="browseQA.jsp">Browse FAQs</a></p>
 
 </body>

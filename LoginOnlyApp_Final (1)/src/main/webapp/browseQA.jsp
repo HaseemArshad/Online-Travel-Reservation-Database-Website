@@ -57,6 +57,16 @@
             e.printStackTrace();
         }
     %>
+<!-- Add this below your existing FAQ display -->
+<hr>
+<h3>Have a Question? Ask Below:</h3>
+
+<form method="post" action="postQuestion">
+    <textarea name="questionText" rows="4" cols="50" placeholder="Type your question here..." required></textarea><br>
+    <input type="submit" value="Submit Question">
+</form>
+
+<a href="home.jsp">Back to Home</a>
 
     <a href="home.jsp">Back to Home</a>
 </body>
