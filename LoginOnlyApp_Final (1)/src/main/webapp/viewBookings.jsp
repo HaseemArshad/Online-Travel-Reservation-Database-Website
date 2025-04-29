@@ -27,14 +27,14 @@
 
     <h2>Your Flight Bookings</h2>
 
-    <!-- ✅ Step 5: Show if there is a seat available for any waitlisted flight -->
+    <!--  Step 5: Show if there is a seat available for any waitlisted flight -->
     <%
         Map<Integer, Boolean> seatAvailableMap = (Map<Integer, Boolean>) request.getAttribute("seatAvailableMap");
         if (seatAvailableMap != null && !seatAvailableMap.isEmpty()) {
             for (Integer flightId : seatAvailableMap.keySet()) {
     %>
         <div class="seat-available">
-            🎉 A seat is now available for Flight ID: <%= flightId %>!
+             A seat is now available for Flight ID: <%= flightId %>!
             <form action="bookFlight.jsp" method="get" style="display:inline;">
                 <input type="hidden" name="flightId" value="<%= flightId %>">
                 <button type="submit">Book Now</button>

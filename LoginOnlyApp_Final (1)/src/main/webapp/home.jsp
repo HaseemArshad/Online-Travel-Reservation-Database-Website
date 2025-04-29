@@ -41,6 +41,21 @@
             if (rs.next()) {
                 session.setAttribute("username", username);
                 session.setAttribute("userId", rs.getInt("id"));
+                session.setAttribute("role", rs.getString("role")); // <-- INSERT: Save role in session
+
+                String role = rs.getString("role"); // <-- INSERT: Get role from query
+
+                // INSERT: Redirect based on role
+                if ("admin".equals(role)) {
+                    response.sendRedirect("adminhome.jsp");
+                    con.close();
+                    return;
+                } else if ("representative".equals(role)) {
+                    response.sendRedirect("representativehome.jsp");
+                    con.close();
+                    return;
+                }
+                // Otherwise continue normally for customer
             } else {
                 out.println("<h2>Login for username '" + username + "' failed. Please check your username and password.</h2>");
                 out.println("<p><a href='login.jsp'>Try Again</a></p>");
