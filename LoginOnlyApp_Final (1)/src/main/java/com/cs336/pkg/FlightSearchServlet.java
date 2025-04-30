@@ -58,7 +58,7 @@ public class FlightSearchServlet extends HttpServlet {
                 flight.put("arrival_time", rs.getString("arrival_time"));
                 flight.put("price", rs.getString("price"));
                 flight.put("stops", rs.getString("stops"));
-                flight.put("duration", rs.getString("duration"));
+                flight.put("capacity", rs.getString("capacity"));
                 departureFlights.add(flight);
             }
 
@@ -80,7 +80,7 @@ public class FlightSearchServlet extends HttpServlet {
                     flight.put("arrival_time", rsReturn.getString("arrival_time"));
                     flight.put("price", rsReturn.getString("price"));
                     flight.put("stops", rsReturn.getString("stops"));
-                    flight.put("duration", rsReturn.getString("duration"));
+                    flight.put("capacity", rs.getString("capacity"));
                     returnFlights.add(flight);
                 }
             }
