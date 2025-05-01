@@ -22,6 +22,19 @@
     <input type="submit" value="Edit Flight-Related Info">
 </form>
 
+<form action="QuestionServlet" method="post">
+    <input type="hidden" name="action" value="view">
+    <input type="submit" value="Reply to User Questions">
+</form>
+
+<form action="repViewWaitlist.jsp" method="get">
+    <input type="submit" value="View Flight Waiting List">
+</form>
+
+<form action="repFlightsByAirport.jsp" method="get">
+    <input type="submit" value="View Flights by Airport">
+</form>
+
 <form action="logout.jsp" method="post" style="display:inline;">
     <input type="submit" value="Sign Out">
 </form>

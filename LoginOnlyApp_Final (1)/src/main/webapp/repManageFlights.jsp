@@ -12,7 +12,6 @@
    <p><b><%= msg %></b></p>
 <% } %>
 
-<!-- Flight Table -->
 <table border="1">
 <tr>
     <th>ID</th><th>Airline</th><th>From</th><th>To</th>
@@ -29,7 +28,6 @@
         <td><%= row[i] %></td>
     <% } %>
     <td>
-        <!-- Edit Button -->
         <form action="FlightServlet" method="post" style="display:inline;">
             <input type="hidden" name="action" value="edit_view">
             <input type="hidden" name="flight_id" value="<%= row[0] %>">
@@ -45,7 +43,6 @@
             <input type="submit" value="Edit">
         </form>
 
-        <!-- Delete Button -->
         <form action="FlightServlet" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this flight?');">
             <input type="hidden" name="action" value="delete">
             <input type="hidden" name="flight_id" value="<%= row[0] %>">
@@ -58,7 +55,6 @@
 
 <hr>
 
-<!-- Add New Flight Section -->
 <h3>Add New Flight</h3>
 <form action="FlightServlet" method="post">
     <input type="hidden" name="action" value="add">
@@ -79,7 +75,6 @@
 
 <% if ("true".equals(String.valueOf(request.getAttribute("edit")))) { %>
 <hr>
-<!-- Edit Existing Flight Section -->
 <h3>Edit Flight</h3>
 <form action="FlightServlet" method="post">
     <input type="hidden" name="action" value="edit">
