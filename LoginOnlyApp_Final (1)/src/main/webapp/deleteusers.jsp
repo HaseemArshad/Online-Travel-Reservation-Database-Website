@@ -94,7 +94,7 @@
     </table>
 
     <br>
-    <a href="adminmanage.jsp">← Back to Manage Users</a>
+    <a href="adminmanage.jsp"> Back to Manage Users</a>
 </div>
 </body>
 </html>

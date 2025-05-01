@@ -56,7 +56,7 @@
 %>
 
     <br>
-    <a href="adminhome.jsp">← Back to Admin Dashboard</a>
+    <a href="adminhome.jsp"> Back to Admin Dashboard</a>
 </div>
 </body>
 </html>

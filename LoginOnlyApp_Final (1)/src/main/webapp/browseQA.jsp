@@ -79,7 +79,7 @@
     </form>
 
     <br>
-    <a href="home.jsp">← Back to Home</a>
+    <a href="home.jsp"> Back to Home</a>
 </div>
 </body>
 </html>

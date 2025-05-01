@@ -94,7 +94,7 @@
     %>
         <div class="flight-card">
             <strong><%= flight.get("airline") %></strong> |
-            <%= flight.get("from_airport") %> → <%= flight.get("to_airport") %><br>
+            <%= flight.get("from_airport") %> -> <%= flight.get("to_airport") %><br>
             Date: <%= flight.get("departure_date") %> |
             $<%= flight.get("price") %> |
             Stops: <%= flight.get("stops") %> |
@@ -116,7 +116,7 @@
     %>
 
     <br>
-    <a href="home.jsp">← Back to Home</a>
+    <a href="home.jsp"> Back to Home</a>
 </div>
 </body>
 </html>

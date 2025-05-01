@@ -127,7 +127,7 @@
         <div class="booking-card">
             Booking ID: <%= booking.get("booking_id") %> |
             <%= booking.get("airline") %> |
-            <%= booking.get("from_airport") %> ➔ <%= booking.get("to_airport") %> |
+            <%= booking.get("from_airport") %> -> <%= booking.get("to_airport") %> |
             Date: <%= booking.get("departure_date") %> |
             Time: <%= booking.get("departure_time") %> |
             Price: $<%= booking.get("price") %> |
@@ -147,7 +147,7 @@
         }
     %>
 
-    <a href="home.jsp">⬅ Back to Home</a>
+    <a href="home.jsp"> Back to Home</a>
 </div>
 </body>
 </html>

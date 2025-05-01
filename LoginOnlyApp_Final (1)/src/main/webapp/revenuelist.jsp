@@ -178,7 +178,7 @@
 
     <br>
     <form action="adminhome.jsp" method="get">
-        <input type="submit" value="⬅ Back to Admin Dashboard">
+        <input type="submit" value=" Back to Admin Dashboard">
     </form>
 </div>
 </body>

@@ -59,7 +59,7 @@
 %>
     </table>
 
-    <br><a href="adminhome.jsp">← Back to Admin Dashboard</a>
+    <br><a href="adminhome.jsp"> Back to Admin Dashboard</a>
 </div>
 </body>
 </html>

@@ -64,7 +64,7 @@
 
     <br>
     <form action="representativehome.jsp" method="get">
-        <input type="submit" value="⬅ Back to Representative Dashboard">
+        <input type="submit" value=" Back to Representative Dashboard">
     </form>
 </div>
 </body>

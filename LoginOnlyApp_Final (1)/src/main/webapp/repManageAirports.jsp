@@ -113,7 +113,7 @@
 
     <br>
     <form action="repEditHub.jsp" method="get">
-        <input type="submit" value="⬅ Back to Edit Hub">
+        <input type="submit" value="Back to Edit Hub">
     </form>
 </div>
 </body>
