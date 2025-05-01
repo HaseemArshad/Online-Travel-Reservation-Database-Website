@@ -2,32 +2,38 @@
 <html>
 <head>
     <title>Book Flight for User</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h2>Book Flight on Behalf of a User</h2>
+<div class="container">
+    <h2>Book Flight on Behalf of a User</h2>
 
-<% String msg = (String) request.getAttribute("message");
-   if (msg != null) { %>
-    <p style="color:green; font-weight:bold;"><%= msg %></p>
-<% } %>
+    <% String msg = (String) request.getAttribute("message");
+       if (msg != null) { %>
+        <p style="color: green; font-weight: bold;"><%= msg %></p>
+    <% } %>
 
-<form action="RepBookFlightServlet" method="post">
-    Customer Username: <input type="text" name="username" required><br><br>
-    Flight ID: <input type="text" name="flightId" required><br><br>
-    Seat Class:
-    <select name="seatClass">
-        <option value="Economy">Economy</option>
-        <option value="Business">Business</option>
-        <option value="First">First</option>
-    </select><br><br>
+    <form action="RepBookFlightServlet" method="post">
+        <label for="username">Customer Username:</label><br>
+        <input type="text" id="username" name="username" required><br><br>
 
-    <input type="submit" value="Book Flight">
-</form>
+        <label for="flightId">Flight ID:</label><br>
+        <input type="text" id="flightId" name="flightId" required><br><br>
 
-<form action="representativehome.jsp" method="get">
+        <label for="seatClass">Seat Class:</label><br>
+        <select id="seatClass" name="seatClass">
+            <option value="Economy">Economy</option>
+            <option value="Business">Business</option>
+            <option value="First">First</option>
+        </select><br><br>
+
+        <input type="submit" value="Book Flight">
+    </form>
+
     <br>
-    <input type="submit" value="Back to Dashboard">
-</form>
-
+    <form action="representativehome.jsp" method="get">
+        <input type="submit" value="Back to Dashboard">
+    </form>
+</div>
 </body>
 </html>

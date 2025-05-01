@@ -4,24 +4,27 @@
 <html>
 <head>
     <title>Flight Search Results</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h2 { color: #2c3e50; }
         .flight-card {
             border: 1px solid #ccc;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
             background: #f9f9f9;
         }
-        .flight-card form { display: inline; }
-        .sort-section, .filter-section { margin-bottom: 20px; }
-        a { text-decoration: none; color: #2980b9; }
+        .flight-card form {
+            display: inline-block;
+            margin-top: 10px;
+        }
+        .sort-section, .filter-section {
+            margin-bottom: 25px;
+        }
     </style>
 </head>
 <body>
+<div class="container">
 
-    <!-- Sort Section -->
     <div class="sort-section">
         <h3>Sort Flights</h3>
         <form method="get" action="searchFlights">
@@ -42,7 +45,6 @@
         </form>
     </div>
 
-    <!-- Filter Section -->
     <div class="filter-section">
         <h3>Filter Flights</h3>
         <form method="get" action="searchFlights">
@@ -52,7 +54,7 @@
             <input type="hidden" name="tripType" value="<%= request.getAttribute("tripType") %>">
             <input type="hidden" name="returnDate" value="<%= request.getAttribute("returnDate") %>">
 
-            Max Price: <input type="number" name="maxPrice" step="0.01"> 
+            Max Price: <input type="number" name="maxPrice" step="0.01">
             Stops: <input type="number" name="stops" min="0">
             Airline: <input type="text" name="airline">
             <input type="submit" value="Apply Filters">
@@ -84,16 +86,18 @@
         }
 
         if (departureFlights.isEmpty()) {
-            out.println("<p>No departure flights found.</p>");
+    %>
+        <p>No departure flights found.</p>
+    <%
         } else {
             for (Map<String, String> flight : departureFlights) {
     %>
         <div class="flight-card">
-            <strong><%= flight.get("airline") %></strong> | 
-            <%= flight.get("from_airport") %> ➔ <%= flight.get("to_airport") %><br>
-            Date: <%= flight.get("departure_date") %> | 
-            $<%= flight.get("price") %> | 
-            Stops: <%= flight.get("stops") %> | 
+            <strong><%= flight.get("airline") %></strong> |
+            <%= flight.get("from_airport") %> → <%= flight.get("to_airport") %><br>
+            Date: <%= flight.get("departure_date") %> |
+            $<%= flight.get("price") %> |
+            Stops: <%= flight.get("stops") %> |
             Duration: <%= flight.get("duration") %>
             <form action="bookFlight" method="post">
                 <input type="hidden" name="flightId" value="<%= flight.get("flight_id") %>">
@@ -111,6 +115,8 @@
         }
     %>
 
-    <br><a href="home.jsp">Back to Home</a>
+    <br>
+    <a href="home.jsp">← Back to Home</a>
+</div>
 </body>
 </html>

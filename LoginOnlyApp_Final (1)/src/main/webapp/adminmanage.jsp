@@ -3,7 +3,6 @@
 <%@ page session="true" %>
 <%
 
-    // Connect to DB
     ApplicationDB db = new ApplicationDB();
     Connection con = db.getConnection();
     Statement stmt = con.createStatement();
@@ -17,26 +16,31 @@
 <html>
 <head>
     <title>Manage Users</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="container">
     <h1>Manage Users</h1>
 
-    <!-- Action Buttons -->
-    <form action="addusers.jsp" method="get" style="display:inline">
+    <form action="addusers.jsp" method="get" style="display:inline-block; margin-right: 10px;">
         <input type="submit" value="Add User" />
     </form>
-    <form action="editusers.jsp" method="get" style="display:inline">
+    <form action="editusers.jsp" method="get" style="display:inline-block; margin-right: 10px;">
         <input type="submit" value="Edit User" />
     </form>
-    <form action="deleteusers.jsp" method="get" style="display:inline">
+    <form action="deleteusers.jsp" method="get" style="display:inline-block;">
         <input type="submit" value="Delete User" />
     </form>
 
     <hr>
-    <h2>List of all Active Users</h2>
-    <table border="1">
+    <h2>List of All Active Users</h2>
+    <table>
         <tr>
-            <th>User ID</th><th>Username</th><th>First Name</th><th>Last Name</th><th>Role</th>
+            <th>User ID</th>
+            <th>Username</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Role</th>
         </tr>
 <%
     while (allUsers.next()) {
@@ -55,6 +59,7 @@
 %>
     </table>
 
-    <br><a href="adminhome.jsp">Back to Admin Dashboard</a>
+    <br><a href="adminhome.jsp">← Back to Admin Dashboard</a>
+</div>
 </body>
 </html>

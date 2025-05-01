@@ -2,13 +2,15 @@
 <html>
 <head>
     <title>Browse & Search FAQs</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="container">
     <h2>Frequently Asked Questions (FAQ)</h2>
 
-    <!-- Search Form -->
     <form method="get">
-        Search: <input type="text" name="keyword">
+        <label for="keyword">Search:</label>
+        <input type="text" name="keyword" id="keyword" placeholder="Enter keyword">
         <input type="submit" value="Search">
     </form>
     <br>
@@ -38,36 +40,46 @@
             boolean found = false;
             while (rs.next()) {
                 found = true;
-                out.println("<b>Q: " + rs.getString("question") + "</b><br>");
-                String answer = rs.getString("answer");
-                if (answer != null) {
-                    out.println("A: " + answer + "<br><br>");
-                } else {
-                    out.println("<i>No answer yet.</i><br><br>");
-                }
+    %>
+                <div style="margin-bottom: 20px;">
+                    <strong>Q: <%= rs.getString("question") %></strong><br>
+                    <%
+                        String answer = rs.getString("answer");
+                        if (answer != null) {
+                    %>
+                        A: <%= answer %><br>
+                    <% } else { %>
+                        <i>No answer yet.</i><br>
+                    <% } %>
+                </div>
+    <%
             }
 
             if (!found) {
-                out.println("<p>No results found for '<b>" + keyword + "</b>'</p>");
+    %>
+                <p>No results found for '<strong><%= keyword %></strong>'</p>
+    <%
             }
 
             conn.close();
         } catch(Exception e) {
-            out.println("Error loading FAQ.");
+    %>
+            <p style="color:red;">Error loading FAQ.</p>
+    <%
             e.printStackTrace();
         }
     %>
-<!-- Add this below your existing FAQ display -->
-<hr>
-<h3>Have a Question? Ask Below:</h3>
 
-<form method="post" action="postQuestion">
-    <textarea name="questionText" rows="4" cols="50" placeholder="Type your question here..." required></textarea><br>
-    <input type="submit" value="Submit Question">
-</form>
+    <hr>
+    <h3>Have a Question? Ask Below:</h3>
 
-<a href="home.jsp">Back to Home</a>
+    <form method="post" action="postQuestion">
+        <textarea name="questionText" rows="4" cols="50" placeholder="Type your question here..." required></textarea><br>
+        <input type="submit" value="Submit Question">
+    </form>
 
-    <a href="home.jsp">Back to Home</a>
+    <br>
+    <a href="home.jsp">← Back to Home</a>
+</div>
 </body>
 </html>

@@ -1,16 +1,28 @@
 <html>
-<head><title>Register</title></head>
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 <body>
-	   <!-- Creating the account,asks for username,firstname,lastname,password-->
-	
-    <h2>Register Your Account!</h2>
+<div class="container">
+    <h2>Register Your Account</h2>
+
     <form action="registerResult.jsp" method="post">
-        Username: <input type="text" name="username" required /><br/>
-        First Name: <input type="text" name="firstName" required /><br/>
-        Last Name: <input type="text" name="lastName" required /><br/>
-        Password: <input type="password" name="password" required /><br/>
+        <label for="username">Username:</label><br>
+        <input type="text" name="username" id="username" required /><br><br>
+
+        <label for="firstName">First Name:</label><br>
+        <input type="text" name="firstName" id="firstName" required /><br><br>
+
+        <label for="lastName">Last Name:</label><br>
+        <input type="text" name="lastName" id="lastName" required /><br><br>
+
+        <label for="password">Password:</label><br>
+        <input type="password" name="password" id="password" required /><br><br>
+
         <p>Already have an account? <a href="login.jsp">Login here</a></p>
         <input type="submit" value="Register" />
     </form>
+</div>
 </body>
-</html> 
+</html>

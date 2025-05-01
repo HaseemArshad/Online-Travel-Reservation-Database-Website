@@ -9,9 +9,14 @@
     ResultSet rs = null;
 %>
 <html>
-<head><title>Most Active Flights</title></head>
+<head>
+    <title>Most Active Flights</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 <body>
-<h1>Flights with Most Tickets Sold</h1>
+<div class="container">
+    <h1>Flights with Most Tickets Sold</h1>
+
 <%
     ps = con.prepareStatement(
         "SELECT f.flight_id, f.airline, COUNT(b.booking_id) AS tickets_sold " +
@@ -22,24 +27,29 @@
     );
     rs = ps.executeQuery();
 %>
-<table border="1">
-    <tr>
-        <th>Flight ID</th><th>Airline</th><th>Tickets Sold</th>
-    </tr>
-<%
-    while (rs.next()) {
-%>
-    <tr>
-        <td><%= rs.getString("flight_id") %></td>
-        <td><%= rs.getString("airline") %></td>
-        <td><%= rs.getInt("tickets_sold") %></td>
-    </tr>
-<%
-    }
-    rs.close();
-    con.close();
-%>
-</table>
-<br><a href="adminhome.jsp">Back to Admin Dashboard</a>
+    <table>
+        <tr>
+            <th>Flight ID</th>
+            <th>Airline</th>
+            <th>Tickets Sold</th>
+        </tr>
+    <%
+        while (rs.next()) {
+    %>
+        <tr>
+            <td><%= rs.getString("flight_id") %></td>
+            <td><%= rs.getString("airline") %></td>
+            <td><%= rs.getInt("tickets_sold") %></td>
+        </tr>
+    <%
+        }
+        rs.close();
+        con.close();
+    %>
+    </table>
+
+    <br>
+    <a href="adminhome.jsp">← Back to Admin Dashboard</a>
+</div>
 </body>
 </html>

@@ -1,6 +1,17 @@
 eclipse.preferences.version=1
+encoding//src/main/webapp/addusers.jsp=UTF-8
+encoding//src/main/webapp/adminmanage.jsp=UTF-8
 encoding//src/main/webapp/bookFlight.jsp=UTF-8
+encoding//src/main/webapp/bookingConfirmation.jsp=UTF-8
+encoding//src/main/webapp/browseQA.jsp=UTF-8
+encoding//src/main/webapp/customermostrevenue.jsp=UTF-8
+encoding//src/main/webapp/deleteusers.jsp=UTF-8
+encoding//src/main/webapp/editusers.jsp=UTF-8
 encoding//src/main/webapp/flightsResult.jsp=UTF-8
 encoding//src/main/webapp/home.jsp=UTF-8
+encoding//src/main/webapp/mostticketssold.jsp=UTF-8
+encoding//src/main/webapp/reservationlist.jsp=UTF-8
+encoding//src/main/webapp/revenuelist.jsp=UTF-8
+encoding//src/main/webapp/salesreport.jsp=UTF-8
 encoding//src/main/webapp/viewBookings.jsp=UTF-8
 encoding/<project>=UTF-8

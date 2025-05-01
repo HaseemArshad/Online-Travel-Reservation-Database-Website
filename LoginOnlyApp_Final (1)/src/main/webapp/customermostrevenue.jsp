@@ -9,9 +9,14 @@
     ResultSet rs = null;
 %>
 <html>
-<head><title>Top Revenue Customer</title></head>
+<head>
+    <title>Top Revenue Customer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 <body>
-<h1>Customer Who Generated Most Revenue</h1>
+<div class="container">
+    <h1>Customer Who Generated Most Revenue</h1>
+
 <%
     ps = con.prepareStatement(
         "SELECT u.id, u.username, u.first_name, u.last_name, SUM(f.price) AS total_revenue " +
@@ -24,9 +29,13 @@
     rs = ps.executeQuery();
     if (rs.next()) {
 %>
-    <table border="1">
+    <table>
         <tr>
-            <th>User ID</th><th>Username</th><th>First Name</th><th>Last Name</th><th>Total Revenue</th>
+            <th>User ID</th>
+            <th>Username</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Total Revenue</th>
         </tr>
         <tr>
             <td><%= rs.getInt("id") %></td>
@@ -45,6 +54,9 @@
     rs.close();
     con.close();
 %>
-<br><a href="adminhome.jsp">Back to Admin Dashboard</a>
+
+    <br>
+    <a href="adminhome.jsp">← Back to Admin Dashboard</a>
+</div>
 </body>
 </html>

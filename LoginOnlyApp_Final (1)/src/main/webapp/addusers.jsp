@@ -44,26 +44,43 @@
     }
 %>
 <html>
-<head><title>Add New User</title></head>
+<head>
+    <title>Add New User</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
 <body>
-<h2>Add New User</h2>
-<% if (message != null) { %>
-    <p><b><%= message %></b></p>
-<% } %>
-<form method="post" action="addusers.jsp">
-    Username: <input type="text" name="username" required /><br/>
-    Password: <input type="password" name="password" required /><br/>
-    First Name: <input type="text" name="first_name" required /><br/>
-    Last Name: <input type="text" name="last_name" required /><br/>
-    Role:
-    <select name="role" required>
-        <option value="customer">Customer</option>
-        <option value="representative">Representative</option>
-        <option value="admin">Admin</option>
-    </select><br/><br/>
-    <input type="submit" value="Add User" />
-</form>
-<br>
-<a href="adminmanage.jsp">Back to Manage Users</a>
+<div class="container">
+    <h2>Add New User</h2>
+
+    <% if (message != null) { %>
+        <p><strong><%= message %></strong></p>
+    <% } %>
+
+    <form method="post" action="addusers.jsp">
+        <label>Username:</label>
+        <input type="text" name="username" required />
+
+        <label>Password:</label>
+        <input type="password" name="password" required />
+
+        <label>First Name:</label>
+        <input type="text" name="first_name" required />
+
+        <label>Last Name:</label>
+        <input type="text" name="last_name" required />
+
+        <label>Role:</label>
+        <select name="role" required>
+            <option value="customer">Customer</option>
+            <option value="representative">Representative</option>
+            <option value="admin">Admin</option>
+        </select>
+
+        <input type="submit" value="Add User" />
+    </form>
+
+    <br>
+    <a href="adminmanage.jsp">← Back to Manage Users</a>
+</div>
 </body>
 </html>

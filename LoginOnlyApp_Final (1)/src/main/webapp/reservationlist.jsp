@@ -2,7 +2,6 @@
 <%@ page import="com.cs336.pkg.ApplicationDB" %>
 <%@ page session="true" %>
 <%
-
     String searchQuery = request.getParameter("search");
     String searchBy = request.getParameter("searchBy");
 
@@ -40,50 +39,71 @@
         rs = ps.executeQuery();
     }
 %>
-
 <html>
-<head><title>Reservation Lookup</title></head>
+<head>
+    <title>Reservation Lookup</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        form {
+            margin-top: 20px;
+        }
+    </style>
+</head>
 <body>
-<h1>Reservation Lookup</h1>
+<div class="container">
+    <h1>Reservation Lookup</h1>
 
-<form method="get" action="reservationlist.jsp">
-    Search by:
-    <select name="searchBy">
-        <option value="flight_id" <%= "flight_id".equals(searchBy) ? "selected" : "" %>>Flight Number</option>
-        <option value="username" <%= "username".equals(searchBy) ? "selected" : "" %>>Customer Name</option>
-    </select>
-    <input type="text" name="search" value="<%= (searchQuery != null ? searchQuery : "") %>" />
-    <input type="submit" value="Search" />
-</form>
+    <form method="get" action="reservationlist.jsp">
+        <label for="searchBy">Search by:</label>
+        <select name="searchBy" id="searchBy">
+            <option value="flight_id" <%= "flight_id".equals(searchBy) ? "selected" : "" %>>Flight Number</option>
+            <option value="username" <%= "username".equals(searchBy) ? "selected" : "" %>>Customer Name</option>
+        </select>
+        <input type="text" name="search" value="<%= (searchQuery != null ? searchQuery : "") %>" />
+        <input type="submit" value="Search" />
+    </form>
 
-<br/>
-<table border="1">
-    <tr>
-        <th>Booking ID</th>
-        <th>Flight Number</th>
-        <th>Booking Date</th>
-        <th>Username</th>
-        <th>First Name</th>
-        <th>Last Name</th>
-    </tr>
-<%
-    while (rs.next()) {
-%>
-    <tr>
-        <td><%= rs.getInt("booking_id") %></td>
-        <td><%= rs.getString("flight_id") %></td>
-        <td><%= rs.getDate("booking_date") %></td>
-        <td><%= rs.getString("username") %></td>
-        <td><%= rs.getString("first_name") %></td>
-        <td><%= rs.getString("last_name") %></td>
-    </tr>
-<%
-    }
-    rs.close();
-    con.close();
-%>
-</table>
+    <table>
+        <tr>
+            <th>Booking ID</th>
+            <th>Flight Number</th>
+            <th>Booking Date</th>
+            <th>Username</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+        </tr>
+        <%
+            while (rs.next()) {
+        %>
+        <tr>
+            <td><%= rs.getInt("booking_id") %></td>
+            <td><%= rs.getString("flight_id") %></td>
+            <td><%= rs.getDate("booking_date") %></td>
+            <td><%= rs.getString("username") %></td>
+            <td><%= rs.getString("first_name") %></td>
+            <td><%= rs.getString("last_name") %></td>
+        </tr>
+        <%
+            }
+            rs.close();
+            con.close();
+        %>
+    </table>
 
-<br><a href="adminhome.jsp">Back to Admin Dashboard</a>
+    <br>
+    <form action="adminhome.jsp" method="get">
+        <input type="submit" value="⬅ Back to Admin Dashboard">
+    </form>
+</div>
 </body>
 </html>

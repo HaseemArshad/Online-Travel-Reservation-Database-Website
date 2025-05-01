@@ -6,20 +6,22 @@
 <html>
 <head>
     <title>Home - Flight Reservation</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<div class="container">
 <%
-    // Asking for username and password from the end user
     String username = request.getParameter("username");
     String password = request.getParameter("password");
 
-    // If parameters are null, fallback to session (for back-to-home)
     if (username == null) {
         username = (String) session.getAttribute("username");
     }
 
     if (username == null) {
-        out.println("<h2>You're not logged in. <a href='login.jsp'>Login</a></h2>");
+%>
+    <h2>You’re not logged in. <a href="login.jsp">Login</a></h2>
+<%
         return;
     }
 
@@ -27,7 +29,9 @@
     Connection con = db.getConnection();
 
     if (con == null) {
-        out.println("Database connection failed. Please try again later.");
+%>
+    <p style="color: red;">Database connection failed. Please try again later.</p>
+<%
     } else {
         PreparedStatement ps;
         ResultSet rs = null;
@@ -41,11 +45,10 @@
             if (rs.next()) {
                 session.setAttribute("username", username);
                 session.setAttribute("userId", rs.getInt("id"));
-                session.setAttribute("role", rs.getString("role")); // <-- INSERT: Save role in session
+                session.setAttribute("role", rs.getString("role"));
 
-                String role = rs.getString("role"); // <-- INSERT: Get role from query
+                String role = rs.getString("role");
 
-                // INSERT: Redirect based on role
                 if ("admin".equals(role)) {
                     response.sendRedirect("adminhome.jsp");
                     con.close();
@@ -55,51 +58,60 @@
                     con.close();
                     return;
                 }
-                // Otherwise continue normally for customer
             } else {
-                out.println("<h2>Login for username '" + username + "' failed. Please check your username and password.</h2>");
-                out.println("<p><a href='login.jsp'>Try Again</a></p>");
+%>
+    <h2>Login failed for username '<%= username %>'</h2>
+    <p><a href="login.jsp">Try Again</a></p>
+<%
                 con.close();
                 return;
             }
         }
 
-        // Either logged in via form or already logged in via session
-        out.println("<h1>Successfully Logged In User: " + username + "!</h1>");
-        out.println("<h2>Welcome back!</h2>");
-        out.println("<p><a href='viewBookings'>View My Bookings</a></p>");
 %>
+    <h1>Welcome, <%= username %>!</h1>
+    <h2>Successfully Logged In</h2>
 
-        <!-- Flight Search Form -->
-        <form action="searchFlights" method="get">
-            <h3>Search for Flights</h3>
-            Trip Type:
-            <select name="tripType">
-                <option value="oneway">One Way</option>
-                <option value="roundtrip">Round Trip</option>
-            </select><br><br>
+    <p><a href="viewBookings">View My Bookings</a></p>
 
-            From Airport Code: <input type="text" name="fromAirport" required><br><br>
-            To Airport Code: <input type="text" name="toAirport" required><br><br>
-            Departure Date (YYYY-MM-DD): <input type="text" name="departureDate" required><br><br>
-            Return Date (YYYY-MM-DD): <input type="text" name="returnDate"><br><br>
-            <input type="submit" value="Search Flights">
-        </form>
+    <form action="searchFlights" method="get">
+        <h3>Search for Flights</h3>
 
+        <label>Trip Type:</label>
+        <select name="tripType">
+            <option value="oneway">One Way</option>
+            <option value="roundtrip">Round Trip</option>
+        </select><br><br>
+
+        <label>From Airport Code:</label>
+        <input type="text" name="fromAirport" required><br><br>
+
+        <label>To Airport Code:</label>
+        <input type="text" name="toAirport" required><br><br>
+
+        <label>Departure Date (YYYY-MM-DD):</label>
+        <input type="text" name="departureDate" required><br><br>
+
+        <label>Return Date (YYYY-MM-DD):</label>
+        <input type="text" name="returnDate"><br><br>
+
+        <input type="submit" value="Search Flights">
+    </form>
 <%
     }
 
     if (session.getAttribute("username") != null) {
 %>
-        <form action="logout.jsp" method="post">
-            <input type="submit" value="Log Out" />
-        </form>
+    <form action="logout.jsp" method="post" style="margin-top: 20px;">
+        <input type="submit" value="Log Out" />
+    </form>
 <%
     }
     con.close();
 %>
 
-<p><a href="browseQA.jsp">Browse FAQs</a></p>
-
+<br>
+<a href="browseQA.jsp">Browse FAQs</a>
+</div>
 </body>
 </html>
