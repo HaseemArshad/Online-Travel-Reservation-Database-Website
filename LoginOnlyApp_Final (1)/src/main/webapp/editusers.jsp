@@ -12,17 +12,9 @@
         searchBy = "username";
     }
 
-    ResultSet users;
-    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-        String query = "SELECT * FROM users WHERE " + searchBy + " LIKE ?";
-        PreparedStatement ps = con.prepareStatement(query);
-        ps.setString(1, "%" + searchQuery + "%");
-        users = ps.executeQuery();
-    } else {
-        users = stmt.executeQuery("SELECT * FROM users");
-    }
-
     String message = null;
+
+    // ✅ STEP 1: Handle update BEFORE querying users
     if ("POST".equalsIgnoreCase(request.getMethod())) {
         String userId = request.getParameter("id");
         String username = request.getParameter("username");
@@ -46,6 +38,17 @@
             message = "Error: " + e.getMessage();
         }
     }
+
+    // ✅ STEP 2: Fetch users AFTER any update
+    ResultSet users;
+    if (searchQuery != null && !searchQuery.trim().isEmpty()) {
+        String query = "SELECT * FROM users WHERE " + searchBy + " LIKE ?";
+        PreparedStatement ps = con.prepareStatement(query);
+        ps.setString(1, "%" + searchQuery + "%");
+        users = ps.executeQuery();
+    } else {
+        users = stmt.executeQuery("SELECT * FROM users");
+    }
 %>
 <html>
 <head>
@@ -60,6 +63,7 @@
         <p><strong><%= message %></strong></p>
     <% } %>
 
+    <!-- Search Bar -->
     <form method="get" action="editusers.jsp">
         <label for="searchBy">Search by:</label>
         <select name="searchBy" id="searchBy">
@@ -74,42 +78,43 @@
 
     <br/>
 
-    <form method="post" action="editusers.jsp">
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-                <th>Role</th>
-                <th>Action</th>
-            </tr>
-        <%
-            while (users.next()) {
-        %>
-            <tr>
-                <td><input type="text" name="id" value="<%= users.getInt("id") %>" readonly size="3" /></td>
-                <td><input type="text" name="username" value="<%= users.getString("username") %>" /></td>
-                <td><input type="password" name="password" value="<%= users.getString("password") %>" /></td>
-                <td><input type="text" name="first_name" value="<%= users.getString("first_name") %>" /></td>
-                <td><input type="text" name="last_name" value="<%= users.getString("last_name") %>" /></td>
-                <td>
-                    <select name="role">
-                        <option value="customer" <%= "customer".equals(users.getString("role")) ? "selected" : "" %>>Customer</option>
-                        <option value="representative" <%= "representative".equals(users.getString("role")) ? "selected" : "" %>>Representative</option>
-                        <option value="admin" <%= "admin".equals(users.getString("role")) ? "selected" : "" %>>Admin</option>
-                    </select>
-                </td>
-                <td><input type="submit" value="Update" /></td>
-            </tr>
-        <%
-            }
-            users.close();
-            con.close();
-        %>
-        </table>
-    </form>
+    <!-- User Table -->
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Role</th>
+            <th>Action</th>
+        </tr>
+    <%
+        while (users.next()) {
+    %>
+        <tr>
+        <form method="post" action="editusers.jsp">
+            <td><input type="text" name="id" value="<%= users.getInt("id") %>" readonly size="3" /></td>
+            <td><input type="text" name="username" value="<%= users.getString("username") %>" /></td>
+            <td><input type="password" name="password" value="<%= users.getString("password") %>" /></td>
+            <td><input type="text" name="first_name" value="<%= users.getString("first_name") %>" /></td>
+            <td><input type="text" name="last_name" value="<%= users.getString("last_name") %>" /></td>
+            <td>
+                <select name="role">
+                    <option value="customer" <%= "customer".equals(users.getString("role")) ? "selected" : "" %>>Customer</option>
+                    <option value="representative" <%= "representative".equals(users.getString("role")) ? "selected" : "" %>>Representative</option>
+                    <option value="admin" <%= "admin".equals(users.getString("role")) ? "selected" : "" %>>Admin</option>
+                </select>
+            </td>
+            <td><input type="submit" value="Update" /></td>
+        </form>
+        </tr>
+    <%
+        }
+        users.close();
+        con.close();
+    %>
+    </table>
 
     <br>
     <a href="adminmanage.jsp">← Back to Manage Users</a>
