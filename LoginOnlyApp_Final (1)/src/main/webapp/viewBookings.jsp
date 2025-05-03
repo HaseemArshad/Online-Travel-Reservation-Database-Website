@@ -71,8 +71,10 @@
     %>
         <div class="seat-available">
             A seat is now available for Flight ID: <%= flightId %>!
-            <form action="bookFlight.jsp" method="get" style="display:inline;">
+            <form action="bookFlight" method="post" style="display:inline;">
                 <input type="hidden" name="flightId" value="<%= flightId %>">
+                <input type="hidden" name="ticketClass" value="economy">
+                <input type="hidden" name="price" value="0">
                 <button type="submit">Book Now</button>
             </form>
         </div>

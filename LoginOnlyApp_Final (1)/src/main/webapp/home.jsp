@@ -46,6 +46,9 @@
                 session.setAttribute("username", username);
                 session.setAttribute("userId", rs.getInt("id"));
                 session.setAttribute("role", rs.getString("role"));
+                session.setAttribute("firstName", rs.getString("first_name"));
+                session.setAttribute("lastName", rs.getString("last_name"));
+
 
                 String role = rs.getString("role");
 
@@ -68,7 +71,20 @@
             }
         }
 
+        // ✅ Get all distinct airport codes
+        Set<String> airportSet = new TreeSet<>();
+        PreparedStatement psAirports = con.prepareStatement(
+            "SELECT DISTINCT from_airport AS airport FROM flights " +
+            "UNION SELECT DISTINCT to_airport AS airport FROM flights"
+        );
+        ResultSet rsAirports = psAirports.executeQuery();
+        while (rsAirports.next()) {
+            airportSet.add(rsAirports.getString("airport"));
+        }
+        rsAirports.close();
+        psAirports.close();
 %>
+
     <h1>Welcome, <%= username %>!</h1>
     <h2>Successfully Logged In</h2>
 
@@ -83,11 +99,21 @@
             <option value="roundtrip">Round Trip</option>
         </select><br><br>
 
-        <label>From Airport Code:</label>
-        <input type="text" name="fromAirport" required><br><br>
+        <label for="fromAirport">From Airport:</label>
+        <select name="fromAirport" id="fromAirport" required>
+            <option value="">-- Select Departure Airport --</option>
+            <% for (String airport : airportSet) { %>
+                <option value="<%= airport %>"><%= airport %></option>
+            <% } %>
+        </select><br><br>
 
-        <label>To Airport Code:</label>
-        <input type="text" name="toAirport" required><br><br>
+        <label for="toAirport">To Airport:</label>
+        <select name="toAirport" id="toAirport" required>
+            <option value="">-- Select Arrival Airport --</option>
+            <% for (String airport : airportSet) { %>
+                <option value="<%= airport %>"><%= airport %></option>
+            <% } %>
+        </select><br><br>
 
         <label>Departure Date (YYYY-MM-DD):</label>
         <input type="text" name="departureDate" required><br><br>
@@ -97,6 +123,7 @@
 
         <input type="submit" value="Search Flights">
     </form>
+
 <%
     }
 

@@ -17,12 +17,13 @@ public class FlightSearchServlet extends HttpServlet {
     }
 
     private void processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String tripType = request.getParameter("tripType");
-        String fromAirport = request.getParameter("fromAirport").trim().toUpperCase();
-        String toAirport = request.getParameter("toAirport").trim().toUpperCase();
-        String departureDate = request.getParameter("departureDate").trim();
-        String returnDate = request.getParameter("returnDate") != null ? request.getParameter("returnDate").trim() : "";
-        String sortBy = request.getParameter("sortBy");
+        String tripType = safeTrim(request.getParameter("tripType"));
+        String fromAirport = safeTrim(request.getParameter("fromAirport")).toUpperCase();
+        String toAirport = safeTrim(request.getParameter("toAirport")).toUpperCase();
+        String departureDate = safeTrim(request.getParameter("departureDate"));
+        String returnDate = safeTrim(request.getParameter("returnDate"));
+        String sortBy = safeTrim(request.getParameter("sortBy"));
+        boolean flexibleDates = "true".equalsIgnoreCase(request.getParameter("flexibleDates"));
 
         List<Map<String, String>> departureFlights = new ArrayList<>();
         List<Map<String, String>> returnFlights = new ArrayList<>();
@@ -32,19 +33,30 @@ public class FlightSearchServlet extends HttpServlet {
             Connection conn = db.getConnection();
 
             String orderClause = "";
-            if (sortBy != null) {
-                if (sortBy.equals("duration")) {
-                    orderClause = " ORDER BY TIMEDIFF(arrival_time, departure_time)";
-                } else if (sortBy.equals("price") || sortBy.equals("departure_time") || sortBy.equals("arrival_time")) {
-                    orderClause = " ORDER BY " + sortBy;
+            if (sortBy != null && !sortBy.isEmpty()) {
+                switch (sortBy) {
+                    case "duration":
+                        orderClause = " ORDER BY TIMEDIFF(arrival_time, departure_time)";
+                        break;
+                    case "price":
+                    case "departure_time":
+                    case "arrival_time":
+                    case "stops":
+                        orderClause = " ORDER BY " + sortBy;
+                        break;
                 }
             }
 
-            String sql = "SELECT *, TIMEDIFF(arrival_time, departure_time) AS duration FROM flights WHERE from_airport = ? AND to_airport = ? AND departure_date = ?" + orderClause;
+            String dateCondition = flexibleDates
+                ? "departure_date BETWEEN DATE_SUB(?, INTERVAL 2 DAY) AND DATE_ADD(?, INTERVAL 2 DAY)"
+                : "departure_date = ?";
+            String sql = "SELECT *, TIMEDIFF(arrival_time, departure_time) AS duration FROM flights WHERE from_airport = ? AND to_airport = ? AND " + dateCondition + orderClause;
+
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, fromAirport);
             stmt.setString(2, toAirport);
             stmt.setString(3, departureDate);
+            if (flexibleDates) stmt.setString(4, departureDate);
 
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -62,11 +74,12 @@ public class FlightSearchServlet extends HttpServlet {
                 departureFlights.add(flight);
             }
 
-            if ("roundtrip".equals(tripType) && !returnDate.isEmpty()) {
+            if ("roundtrip".equalsIgnoreCase(tripType) && !returnDate.isEmpty()) {
                 PreparedStatement returnStmt = conn.prepareStatement(sql);
                 returnStmt.setString(1, toAirport);
                 returnStmt.setString(2, fromAirport);
                 returnStmt.setString(3, returnDate);
+                if (flexibleDates) returnStmt.setString(4, returnDate);
 
                 ResultSet rsReturn = returnStmt.executeQuery();
                 while (rsReturn.next()) {
@@ -80,7 +93,7 @@ public class FlightSearchServlet extends HttpServlet {
                     flight.put("arrival_time", rsReturn.getString("arrival_time"));
                     flight.put("price", rsReturn.getString("price"));
                     flight.put("stops", rsReturn.getString("stops"));
-                    flight.put("capacity", rs.getString("capacity"));
+                    flight.put("capacity", rsReturn.getString("capacity"));
                     returnFlights.add(flight);
                 }
             }
@@ -100,5 +113,9 @@ public class FlightSearchServlet extends HttpServlet {
 
         RequestDispatcher rd = request.getRequestDispatcher("flightsResult.jsp");
         rd.forward(request, response);
+    }
+
+    private String safeTrim(String input) {
+        return input == null ? "" : input.trim();
     }
 }

@@ -1,99 +1,112 @@
+<%@ page import="java.util.*" %>
 <%@ page import="java.sql.*" %>
+<%@ page import="java.text.DecimalFormat" %>
 <%@ page import="com.cs336.pkg.ApplicationDB" %>
-<%@ page import="java.io.PrintWriter" %>
 <html>
 <head>
-    <title>Flight Booking</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>Confirm Booking</title>
+    <script>
+        let countdown = 300;
+        function startTimer() {
+            const timerDisplay = document.getElementById("timer");
+            const interval = setInterval(() => {
+                let minutes = Math.floor(countdown / 60);
+                let seconds = countdown % 60;
+                timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                if (--countdown < 0) {
+                    clearInterval(interval);
+                    document.getElementById("expired").style.display = "block";
+                    document.getElementById("bookingForm").style.display = "none";
+                }
+            }, 1000);
+        }
+        window.onload = startTimer;
+    </script>
 </head>
 <body>
-<div class="container">
-<%
-    Integer userId = (Integer) session.getAttribute("userId");
-    String flightIdStr = request.getParameter("flightId");
 
-    if (userId == null) {
-%>
-    <h2>You must be logged in to book a flight.</h2>
-    <a href="login.jsp">Login</a>
 <%
-    } else if (flightIdStr == null) {
+    String flightId = request.getParameter("flightId");
+    String ticketClass = request.getParameter("ticketClass");
+
+    String firstName = (String) session.getAttribute("firstName");
+    String lastName = (String) session.getAttribute("lastName");
+
+    if (flightId == null) {
 %>
-    <h2>No flight selected for booking.</h2>
-    <a href="home.jsp">Back to Home</a>
+    <p style="color:red;">No flight selected. <a href="home.jsp">Return to home</a></p>
 <%
     } else {
-        int flightId = Integer.parseInt(flightIdStr);
-        try {
-            ApplicationDB db = new ApplicationDB();
-            Connection conn = db.getConnection();
+        ApplicationDB db = new ApplicationDB();
+        Connection con = db.getConnection();
+        PreparedStatement ps = con.prepareStatement("SELECT * FROM flights WHERE flight_id = ?");
+        ps.setInt(1, Integer.parseInt(flightId));
+        ResultSet rs = ps.executeQuery();
 
-            PreparedStatement capStmt = conn.prepareStatement(
-                "SELECT capacity FROM flights WHERE flight_id = ?");
-            capStmt.setInt(1, flightId);
-            ResultSet capRs = capStmt.executeQuery();
+        if (rs.next()) {
+            String airline = rs.getString("airline");
+            String from = rs.getString("from_airport");
+            String to = rs.getString("to_airport");
+            String departure = rs.getString("departure_time");
+            String arrival = rs.getString("arrival_time");
+            String date = rs.getString("departure_date");
+            double basePrice = rs.getDouble("price");
 
-            int capacity = 0;
-            if (capRs.next()) {
-                capacity = capRs.getInt("capacity");
+            double adjustment = 0.0;
+            if ("Business".equals(ticketClass)) {
+                adjustment = 100.0;
+            } else if ("First".equals(ticketClass)) {
+                adjustment = 200.0;
             }
-            capRs.close();
-            capStmt.close();
 
-            PreparedStatement bookStmt = conn.prepareStatement(
-                "SELECT COUNT(*) AS booked FROM bookings WHERE flight_id = ?");
-            bookStmt.setInt(1, flightId);
-            ResultSet bookRs = bookStmt.executeQuery();
+            double price = basePrice + adjustment;
+            double fee = price * 0.10;
+            double total = price + fee;
 
-            int booked = 0;
-            if (bookRs.next()) {
-                booked = bookRs.getInt("booked");
-            }
-            bookRs.close();
-            bookStmt.close();
-
-            boolean canBook = (booked < capacity);
-
-            if (canBook) {
-                PreparedStatement ps = conn.prepareStatement(
-                    "INSERT INTO bookings (user_id, flight_id) VALUES (?, ?)");
-                ps.setInt(1, userId);
-                ps.setInt(2, flightId);
-                ps.executeUpdate();
-                ps.close();
-
-                PreparedStatement deleteWaitlist = conn.prepareStatement(
-                    "DELETE FROM waiting_list WHERE user_id = ? AND flight_id = ?");
-                deleteWaitlist.setInt(1, userId);
-                deleteWaitlist.setInt(2, flightId);
-                deleteWaitlist.executeUpdate();
-                deleteWaitlist.close();
+            DecimalFormat df = new DecimalFormat("0.00");
 %>
-    <h2>Flight booked successfully!</h2>
-    <p>You’ll be redirected back to the home page shortly.</p>
-    <script>
-        setTimeout(function() {
-            window.location.href = 'home.jsp';
-        }, 3000);
-    </script>
+
+    <h3>Flight Summary</h3>
+    <p><strong>Airline:</strong> <%= airline %></p>
+    <p><strong>From:</strong> <%= from %></p>
+    <p><strong>To:</strong> <%= to %></p>
+    <p><strong>Departure:</strong> <%= date %> at <%= departure %></p>
+    <p><strong>Arrival:</strong> <%= arrival %></p>
+
+<% if (ticketClass != null) { %>
+    <h3>Payment Summary</h3>
+    <p>Base Price: $<%= df.format(basePrice) %></p>
+    <p>Class Fee: $<%= df.format(adjustment) %></p>
+    <p>Booking Fee (10%): $<%= df.format(fee) %></p>
+    <p><strong>Total: $<%= df.format(total) %></strong></p>
+
+    <div id="expired" style="color:red; display:none; font-weight:bold;">
+        Reservation expired. Please start again.
+    </div>
+
+    <div id="bookingForm">
+        <form action="bookFlight" method="post">
+            <input type="hidden" name="flightId" value="<%= flightId %>">
+            <input type="hidden" name="ticketClass" value="<%= ticketClass %>">
+            <input type="hidden" name="price" value="<%= df.format(total) %>">
+            <input type="hidden" name="firstName" value="<%= firstName %>">
+            <input type="hidden" name="lastName" value="<%= lastName %>">
+            <input type="submit" value="Confirm and Pay">
+        </form>
+    </div>
+<% } %>
+
 <%
-            } else {
+        } else {
 %>
-    <h2>Sorry, the flight is already full.</h2>
-    <p>You have been added to the waitlist.</p>
-    <a href="home.jsp">Back to Home</a>
-<%
-            }
-
-            conn.close();
-        } catch (Exception e) {
-%>
-    <h2>Error booking flight. Please try again.</h2>
-    <pre style="color:red;"><%= e.getMessage() %></pre>
+    <p style="color:red;">Flight not found.</p>
 <%
         }
+        rs.close();
+        ps.close();
+        con.close();
     }
 %>
-</div>
+
 </body>
 </html>

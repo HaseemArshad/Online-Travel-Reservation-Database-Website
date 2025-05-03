@@ -2,12 +2,11 @@ package com.cs336.pkg;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.List;
 import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 public class CancelBookingServlet extends HttpServlet {
-    
+
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String bookingIdStr = request.getParameter("bookingId");
 
@@ -21,7 +20,7 @@ public class CancelBookingServlet extends HttpServlet {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
-            // 1️⃣ Get booking details before deleting
+            // Get booking details
             PreparedStatement getBooking = conn.prepareStatement(
                 "SELECT user_id, flight_id FROM bookings WHERE booking_id = ?");
             getBooking.setInt(1, bookingId);
@@ -31,30 +30,37 @@ public class CancelBookingServlet extends HttpServlet {
                 int userId = rs.getInt("user_id");
                 int flightId = rs.getInt("flight_id");
 
-                // 2️⃣ Insert into canceled_bookings
-                PreparedStatement insertCancel = conn.prepareStatement(
-                    "INSERT INTO canceled_bookings (booking_id, user_id, flight_id) VALUES (?, ?, ?)");
-                insertCancel.setInt(1, bookingId);
-                insertCancel.setInt(2, userId);
-                insertCancel.setInt(3, flightId);
-                insertCancel.executeUpdate();
-
-                // 3️⃣ Delete from bookings
+                // Delete booking
                 PreparedStatement deleteBooking = conn.prepareStatement(
                     "DELETE FROM bookings WHERE booking_id = ?");
                 deleteBooking.setInt(1, bookingId);
                 deleteBooking.executeUpdate();
 
-                // 4️⃣ Get all users on waitlist for that flight
-                List<Integer> waitlistedUsers = db.getWaitlistedUsers(flightId);
+                // Delete ticket
+                PreparedStatement deleteTicket = conn.prepareStatement(
+                    "DELETE FROM ticket WHERE user_id = ? AND flight_number = (SELECT flight_number FROM flights WHERE flight_id = ?)");
+                deleteTicket.setInt(1, userId);
+                deleteTicket.setInt(2, flightId);
+                deleteTicket.executeUpdate();
 
-                // 5️⃣ Set seatAvailable only if users are waiting
-                if (!waitlistedUsers.isEmpty()) {
-                    HttpSession session = request.getSession();
-                    session.setAttribute("seatAvailable", flightId);
+                // Check if any users are waiting
+                PreparedStatement getWaitlist = conn.prepareStatement(
+                    "SELECT user_id FROM waiting_list WHERE flight_id = ? AND notified = FALSE ORDER BY added_time ASC LIMIT 1");
+                getWaitlist.setInt(1, flightId);
+                ResultSet rsWait = getWaitlist.executeQuery();
+
+                if (rsWait.next()) {
+                    int nextUserId = rsWait.getInt("user_id");
+
+                    // Mark user as notified
+                    PreparedStatement notifyStmt = conn.prepareStatement(
+                        "UPDATE waiting_list SET notified = TRUE WHERE user_id = ? AND flight_id = ?");
+                    notifyStmt.setInt(1, nextUserId);
+                    notifyStmt.setInt(2, flightId);
+                    notifyStmt.executeUpdate();
                 }
 
-                request.getSession().setAttribute("message", "Booking cancelled successfully.");
+                request.getSession().setAttribute("message", "Booking cancelled. Waitlisted user notified.");
             } else {
                 request.getSession().setAttribute("message", "Booking not found.");
             }
@@ -63,12 +69,11 @@ public class CancelBookingServlet extends HttpServlet {
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.getSession().setAttribute("message", "Error while cancelling booking.");
+            request.getSession().setAttribute("message", "❌ Error while cancelling booking.");
         }
 
         response.sendRedirect("viewBookings?filter=upcoming");
     }
-    
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.getWriter().println("❌ Wrong HTTP Method. Use POST for cancellation.");
