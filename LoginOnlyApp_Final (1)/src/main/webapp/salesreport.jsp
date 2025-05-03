@@ -1,4 +1,4 @@
-<%@ page import="java.sql.*" %>
+ <%@ page import="java.sql.*" %>
 <%@ page import="com.cs336.pkg.ApplicationDB" %>
 <%@ page session="true" %>
 <%
@@ -11,9 +11,9 @@
         Connection con = db.getConnection();
 
         PreparedStatement ps = con.prepareStatement(
-            "SELECT COUNT(*) AS ticket_count, SUM(f.price) AS revenue " +
-            "FROM bookings b JOIN flights f ON b.flight_id = f.flight_id " +
-            "WHERE DATE_FORMAT(b.booking_date, '%Y-%m') = ?"
+        	    "SELECT COUNT(*) AS ticket_count, SUM(booking_fee) AS revenue " +
+        	    "FROM Ticket " +
+        	    "WHERE DATE_FORMAT(purchase_date, '%Y-%m') = ?"
         );
         ps.setString(1, selectedMonth);
         ResultSet rs = ps.executeQuery();
