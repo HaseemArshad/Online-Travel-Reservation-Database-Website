@@ -2,6 +2,7 @@
 <%@ page import="com.cs336.pkg.ApplicationDB" %>
 <%@ page session="true" %>
 <%
+
     ApplicationDB db = new ApplicationDB();
     Connection con = db.getConnection();
     PreparedStatement ps = null;
@@ -11,10 +12,6 @@
 <head>
     <title>Top Revenue Customer</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        table { border-collapse: collapse; margin-top: 20px; width: 100%; }
-        th, td { padding: 10px; border: 1px solid #ccc; text-align: center; }
-    </style>
 </head>
 <body>
 <div class="container">
@@ -22,9 +19,10 @@
 
 <%
     ps = con.prepareStatement(
-        "SELECT u.id, u.username, u.first_name, u.last_name, SUM(t.booking_fee) AS total_revenue " +
-        "FROM users u " +
-        "JOIN ticket t ON t.user_id = u.id " +
+        "SELECT u.id, u.username, u.first_name, u.last_name, SUM(f.price) AS total_revenue " +
+        "FROM bookings b " +
+        "JOIN users u ON b.user_id = u.id " +
+        "JOIN flights f ON b.flight_id = f.flight_id " +
         "GROUP BY u.id, u.username, u.first_name, u.last_name " +
         "ORDER BY total_revenue DESC LIMIT 1"
     );
@@ -37,7 +35,7 @@
             <th>Username</th>
             <th>First Name</th>
             <th>Last Name</th>
-            <th>Total Revenue (Booking Fees Only)</th>
+            <th>Total Revenue</th>
         </tr>
         <tr>
             <td><%= rs.getInt("id") %></td>
@@ -58,7 +56,7 @@
 %>
 
     <br>
-    <a href="adminhome.jsp">Back to Admin Dashboard</a>
+    <a href="adminhome.jsp"> Back to Admin Dashboard</a>
 </div>
 </body>
 </html>
