@@ -20,8 +20,8 @@
         <label for="bookingId">Booking ID:</label><br>
         <input type="text" name="bookingId" id="bookingId" required><br><br>
 
-        <label for="newFlightId">New Flight ID:</label><br>
-        <input type="text" name="newFlightId" id="newFlightId"><br><br>
+        <label for="newFlightNumber">New Flight Number:</label><br> <!-- changed label/input name -->
+        <input type="text" name="newFlightNumber" id="newFlightNumber"><br><br>
 
         <label for="newClass">New Class:</label><br>
         <select name="newClass" id="newClass">

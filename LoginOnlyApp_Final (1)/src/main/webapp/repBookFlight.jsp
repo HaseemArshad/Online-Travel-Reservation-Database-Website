@@ -17,8 +17,8 @@
         <label for="username">Customer Username:</label><br>
         <input type="text" id="username" name="username" required><br><br>
 
-        <label for="flightId">Flight ID:</label><br>
-        <input type="text" id="flightId" name="flightId" required><br><br>
+        <label for="flightNumber">Flight Number:</label><br>
+        <input type="text" id="flightNumber" name="flightNumber" required><br><br>
 
         <label for="seatClass">Seat Class:</label><br>
         <select id="seatClass" name="seatClass">
