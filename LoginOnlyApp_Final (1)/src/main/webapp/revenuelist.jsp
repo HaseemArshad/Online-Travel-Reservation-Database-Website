@@ -1,15 +1,14 @@
-
 <%@ page import="java.sql.*" %>
 <%@ page import="com.cs336.pkg.ApplicationDB" %>
 <%@ page session="true" %>
 <%
     String searchBy = request.getParameter("searchBy");
-    String flightNumber = request.getParameter("flight_number");
-    String selectedAirline = request.getParameter("airline");
     String username = request.getParameter("username");
     String fullName = request.getParameter("full_name");
-    double totalRevenue = 0.0;
+    String airline = request.getParameter("airline");
+    String flightNumber = request.getParameter("flight_number");
 
+    double totalRevenue = 0.0;
     ApplicationDB db = new ApplicationDB();
     Connection con = db.getConnection();
     PreparedStatement ps = null;
@@ -61,7 +60,7 @@
                     while (rs.next()) {
                         String code = rs.getString("airline");
                 %>
-                <option value="<%= code %>" <%= code.equals(selectedAirline) ? "selected" : "" %>><%= code %></option>
+                <option value="<%= code %>" <%= code.equals(airline) ? "selected" : "" %>><%= code %></option>
                 <%
                     }
                     rs.close();
@@ -79,88 +78,109 @@
         <input type="submit" value="Search" />
     </form>
 
-<%-- FLIGHT SEARCH --%>
-<%
-    if ("flight".equals(searchBy) && flightNumber != null && !flightNumber.trim().isEmpty()) {
-        ps = con.prepareStatement("SELECT SUM(booking_fee) AS revenue FROM ticket WHERE flight_number = ?");
-        ps.setString(1, flightNumber);
-        rs = ps.executeQuery();
-        if (rs.next()) totalRevenue = rs.getDouble("revenue");
-        rs.close();
-%>
-        <h3>Total Revenue from Flight '<%= flightNumber %>': $<%= String.format("%.2f", totalRevenue) %></h3>
-        <%
+    <%-- Flight Search --%>
+    <%
+        if ("flight".equals(searchBy) && flightNumber != null && !flightNumber.trim().isEmpty()) {
+            ps = con.prepareStatement("SELECT SUM(booking_fee) AS revenue FROM ticket WHERE flight_number = ?");
+            ps.setString(1, flightNumber);
+            rs = ps.executeQuery();
+            if (rs.next()) totalRevenue = rs.getDouble("revenue");
+            rs.close();
+    %>
+    <h3>Total Revenue from Flight '<%= flightNumber %>': $<%= String.format("%.2f", totalRevenue) %></h3>
+    <%
             ps = con.prepareStatement("SELECT * FROM ticket WHERE flight_number = ?");
             ps.setString(1, flightNumber);
             rs = ps.executeQuery();
-        %>
-        <table>
-            <tr><th>Ticket ID</th><th>Customer</th><th>Flight</th><th>Booking Fee</th></tr>
-            <% while (rs.next()) { %>
-            <tr>
-                <td><%= rs.getInt("ticket_id") %></td>
-                <td><%= rs.getString("customer_first_name") %> <%= rs.getString("customer_last_name") %></td>
-                <td><%= rs.getString("flight_number") %></td>
-                <td>$<%= String.format("%.2f", rs.getDouble("booking_fee")) %></td>
-            </tr>
-            <% } rs.close(); %>
-        </table>
+    %>
+    <table>
+        <tr><th>Ticket ID</th><th>Customer</th><th>Flight</th><th>Booking Fee</th></tr>
+        <% while (rs.next()) { %>
+        <tr>
+            <td><%= rs.getInt("ticket_id") %></td>
+            <td><%= rs.getString("customer_first_name") %> <%= rs.getString("customer_last_name") %></td>
+            <td><%= rs.getString("flight_number") %></td>
+            <td>$<%= String.format("%.2f", rs.getDouble("booking_fee")) %></td>
+        </tr>
+        <% } rs.close(); %>
+    </table>
 
-<%-- AIRLINE SEARCH --%>
-<% } else if ("airline".equals(searchBy) && selectedAirline != null && !selectedAirline.trim().isEmpty()) {
-        ps = con.prepareStatement("SELECT SUM(T.booking_fee) AS revenue FROM ticket T JOIN flights F ON T.flight_number = F.flight_number WHERE F.airline = ?");
-        ps.setString(1, selectedAirline);
+    <%-- Airline Search --%>
+    <% } else if ("airline".equals(searchBy) && airline != null && !airline.trim().isEmpty()) {
+            ps = con.prepareStatement(
+                "SELECT SUM(T.booking_fee) AS revenue FROM ticket T " +
+                "JOIN flights F ON T.flight_number = F.flight_number WHERE F.airline = ?"
+            );
+            ps.setString(1, airline);
+            rs = ps.executeQuery();
+            if (rs.next()) totalRevenue = rs.getDouble("revenue");
+            rs.close();
+    %>
+    <h3>Total Revenue from Airline '<%= airline %>': $<%= String.format("%.2f", totalRevenue) %></h3>
+    <%
+            ps = con.prepareStatement(
+                "SELECT T.* FROM ticket T " +
+                "JOIN flights F ON T.flight_number = F.flight_number WHERE F.airline = ?"
+            );
+            ps.setString(1, airline);
+            rs = ps.executeQuery();
+    %>
+    <table>
+        <tr><th>Ticket ID</th><th>Customer</th><th>Flight</th><th>Booking Fee</th></tr>
+        <% while (rs.next()) { %>
+        <tr>
+            <td><%= rs.getInt("ticket_id") %></td>
+            <td><%= rs.getString("customer_first_name") %> <%= rs.getString("customer_last_name") %></td>
+            <td><%= rs.getString("flight_number") %></td>
+            <td>$<%= String.format("%.2f", rs.getDouble("booking_fee")) %></td>
+        </tr>
+        <% } rs.close(); %>
+    </table>
+
+    <%-- Customer Search with full name match --%>
+    <% } else if ("customer".equals(searchBy) &&
+                  username != null && fullName != null &&
+                  !username.trim().isEmpty() && !fullName.trim().isEmpty()) {
+
+        String[] parts = fullName.trim().split(" ");
+        String first = parts.length > 0 ? parts[0] : "";
+        String last = parts.length > 1 ? parts[1] : "";
+
+        ps = con.prepareStatement(
+            "SELECT SUM(T.booking_fee) AS revenue " +
+            "FROM ticket T " +
+            "JOIN users U ON T.customer_first_name = U.first_name AND T.customer_last_name = U.last_name " +
+            "WHERE U.username = ? AND U.first_name = ? AND U.last_name = ?"
+        );
+        ps.setString(1, username);
+        ps.setString(2, first);
+        ps.setString(3, last);
         rs = ps.executeQuery();
         if (rs.next()) totalRevenue = rs.getDouble("revenue");
         rs.close();
-%>
-        <h3>Total Revenue from Airline '<%= selectedAirline %>': $<%= String.format("%.2f", totalRevenue) %></h3>
-        <%
-            ps = con.prepareStatement("SELECT T.* FROM ticket T JOIN flights F ON T.flight_number = F.flight_number WHERE F.airline = ?");
-            ps.setString(1, selectedAirline);
-            rs = ps.executeQuery();
-        %>
-        <table>
-            <tr><th>Ticket ID</th><th>Customer</th><th>Flight</th><th>Booking Fee</th></tr>
-            <% while (rs.next()) { %>
-            <tr>
-                <td><%= rs.getInt("ticket_id") %></td>
-                <td><%= rs.getString("customer_first_name") %> <%= rs.getString("customer_last_name") %></td>
-                <td><%= rs.getString("flight_number") %></td>
-                <td>$<%= String.format("%.2f", rs.getDouble("booking_fee")) %></td>
-            </tr>
-            <% } rs.close(); %>
-        </table>
-
-<%-- CUSTOMER SEARCH --%>
-<% } else if ("customer".equals(searchBy) && username != null && fullName != null &&
-            !username.trim().isEmpty() && !fullName.trim().isEmpty()) {
-    String[] parts = fullName.trim().split(" ");
-    String first = parts.length > 0 ? parts[0] : "";
-    String last = parts.length > 1 ? parts[1] : "";
-
-    ps = con.prepareStatement("SELECT SUM(T.booking_fee) AS revenue FROM ticket T JOIN users U ON T.customer_first_name = U.first_name AND T.customer_last_name = U.last_name WHERE U.username = ?");
-    ps.setString(1, username);
-    rs = ps.executeQuery();
-    if (rs.next()) totalRevenue = rs.getDouble("revenue");
-    rs.close();
-%>
-        <h3>Total Revenue from Customer '<%= fullName %>' (Username: <%= username %>): $<%= String.format("%.2f", totalRevenue) %></h3>
-        <%
-            ps = con.prepareStatement("SELECT T.* FROM ticket T JOIN users U ON T.customer_first_name = U.first_name AND T.customer_last_name = U.last_name WHERE U.username = ?");
-            ps.setString(1, username);
-            rs = ps.executeQuery();
-        %>
-        <table>
-            <tr><th>Ticket ID</th><th>Flight</th><th>Booking Fee</th></tr>
-            <% while (rs.next()) { %>
-            <tr>
-                <td><%= rs.getInt("ticket_id") %></td>
-                <td><%= rs.getString("flight_number") %></td>
-                <td>$<%= String.format("%.2f", rs.getDouble("booking_fee")) %></td>
-            </tr>
-            <% } rs.close(); } con.close(); %>
-        </table>
+    %>
+    <h3>Total Revenue from Customer '<%= fullName %>' (Username: <%= username %>): $<%= String.format("%.2f", totalRevenue) %></h3>
+    <%
+        ps = con.prepareStatement(
+            "SELECT T.* FROM ticket T " +
+            "JOIN users U ON T.customer_first_name = U.first_name AND T.customer_last_name = U.last_name " +
+            "WHERE U.username = ? AND U.first_name = ? AND U.last_name = ?"
+        );
+        ps.setString(1, username);
+        ps.setString(2, first);
+        ps.setString(3, last);
+        rs = ps.executeQuery();
+    %>
+    <table>
+        <tr><th>Ticket ID</th><th>Flight</th><th>Booking Fee</th></tr>
+        <% while (rs.next()) { %>
+        <tr>
+            <td><%= rs.getInt("ticket_id") %></td>
+            <td><%= rs.getString("flight_number") %></td>
+            <td>$<%= String.format("%.2f", rs.getDouble("booking_fee")) %></td>
+        </tr>
+        <% } rs.close(); } con.close(); %>
+    </table>
 
     <br>
     <form action="adminhome.jsp" method="get">
