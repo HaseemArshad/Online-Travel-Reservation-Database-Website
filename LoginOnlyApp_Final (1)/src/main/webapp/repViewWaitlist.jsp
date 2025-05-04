@@ -26,8 +26,8 @@
     <h2>Flight Waiting List Lookup</h2>
 
     <form action="WaitlistServlet" method="post">
-        <label for="flight_id">Enter Flight ID:</label>
-        <input type="number" name="flight_id" id="flight_id" required>
+        <label for="flight_number">Enter Flight Number:</label>
+        <input type="text" name="flight_number" id="flight_number" required>
         <input type="hidden" name="action" value="lookup">
         <input type="submit" value="Search">
     </form>
@@ -41,7 +41,7 @@
         List<Map<String, String>> waitlist = (List<Map<String, String>>) request.getAttribute("waitlist");
         if (waitlist != null && !waitlist.isEmpty()) {
     %>
-        <h3>Passengers on Waiting List for Flight <%= request.getAttribute("flight_id") %></h3>
+        <h3>Passengers on Waiting List for Flight <%= request.getAttribute("flight_number") %></h3>
         <table>
             <tr>
                 <th>User ID</th>
@@ -64,7 +64,7 @@
 
     <br>
     <form action="representativehome.jsp" method="get">
-        <input type="submit" value=" Back to Representative Dashboard">
+        <input type="submit" value="⬅ Back to Representative Dashboard">
     </form>
 </div>
 </body>
