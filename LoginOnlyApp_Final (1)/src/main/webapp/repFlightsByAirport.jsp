@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<%@ page import="java.util.*" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
 <html>
 <head>
     <title>Flights by Airport</title>
@@ -39,23 +40,29 @@
         <p><strong><%= msg %></strong></p>
     <% } %>
 
-    <% 
+    <%
         List<Map<String, String>> departures = (List<Map<String, String>>) request.getAttribute("departingFlights");
         List<Map<String, String>> arrivals = (List<Map<String, String>>) request.getAttribute("arrivingFlights");
-
-        if (departures != null && !departures.isEmpty()) { 
     %>
+
+    <% if (departures != null && !departures.isEmpty()) { %>
         <h3>Departing Flights</h3>
         <table>
-            <tr><th>ID</th><th>Airline</th><th>To</th><th>Date</th><th>Departure Time</th></tr>
+            <tr>
+                <th>Flight Number</th>
+                <th>Airline</th>
+                <th>To</th>
+                <th>Departure Date</th>
+                <th>Departure Time</th>
+            </tr>
             <% for (Map<String, String> f : departures) { %>
-                <tr>
-                    <td><%= f.get("flight_id") %></td>
-                    <td><%= f.get("airline") %></td>
-                    <td><%= f.get("to_airport") %></td>
-                    <td><%= f.get("departure_date") %></td>
-                    <td><%= f.get("departure_time") %></td>
-                </tr>
+            <tr>
+                <td><%= f.get("flight_number") %></td>
+                <td><%= f.get("airline") %></td>
+                <td><%= f.get("to_airport") %></td>
+                <td><%= f.get("departure_date") %></td>
+                <td><%= f.get("departure_time") %></td>
+            </tr>
             <% } %>
         </table>
     <% } %>
@@ -63,21 +70,27 @@
     <% if (arrivals != null && !arrivals.isEmpty()) { %>
         <h3>Arriving Flights</h3>
         <table>
-            <tr><th>ID</th><th>Airline</th><th>From</th><th>Date</th><th>Arrival Time</th></tr>
+            <tr>
+                <th>Flight Number</th>
+                <th>Airline</th>
+                <th>From</th>
+                <th>Departure Date</th>
+                <th>Arrival Time</th>
+            </tr>
             <% for (Map<String, String> f : arrivals) { %>
-                <tr>
-                    <td><%= f.get("flight_id") %></td>
-                    <td><%= f.get("airline") %></td>
-                    <td><%= f.get("from_airport") %></td>
-                    <td><%= f.get("departure_date") %></td>
-                    <td><%= f.get("arrival_time") %></td>
-                </tr>
+            <tr>
+                <td><%= f.get("flight_number") %></td>
+                <td><%= f.get("airline") %></td>
+                <td><%= f.get("from_airport") %></td>
+                <td><%= f.get("departure_date") %></td>
+                <td><%= f.get("arrival_time") %></td>
+            </tr>
             <% } %>
         </table>
     <% } %>
 
     <form action="representativehome.jsp" method="get">
-        <input type="submit" value="Back to Representative Dashboard">
+        <input type="submit" value="⬅ Back to Representative Dashboard">
     </form>
 </div>
 </body>

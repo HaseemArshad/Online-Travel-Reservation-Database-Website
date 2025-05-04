@@ -14,7 +14,7 @@ public class RepEditReservationServlet extends HttpServlet {
 
         String username = request.getParameter("username");
         String bookingId = request.getParameter("bookingId");
-        String newFlightId = request.getParameter("newFlightId");
+        String newFlightNumber = request.getParameter("newFlightNumber"); // changed from newFlightId
         String newClass = request.getParameter("newClass");
 
         Connection con = null;
@@ -24,6 +24,8 @@ public class RepEditReservationServlet extends HttpServlet {
         try {
             ApplicationDB db = new ApplicationDB();
             con = db.getConnection();
+
+            // Find user ID
             ps = con.prepareStatement("SELECT id FROM users WHERE username = ?");
             ps.setString(1, username);
             rs = ps.executeQuery();
@@ -38,6 +40,8 @@ public class RepEditReservationServlet extends HttpServlet {
             }
 
             ps.close(); rs.close();
+
+            // Check if booking exists for user
             ps = con.prepareStatement("SELECT * FROM bookings WHERE booking_id = ? AND user_id = ?");
             ps.setInt(1, Integer.parseInt(bookingId));
             ps.setInt(2, userId);
@@ -49,10 +53,27 @@ public class RepEditReservationServlet extends HttpServlet {
                 return;
             }
 
+            Integer newFlightId = null;
+            if (newFlightNumber != null && !newFlightNumber.isEmpty()) {
+                ps.close(); rs.close();
+                ps = con.prepareStatement("SELECT flight_id FROM flights WHERE flight_number = ?");
+                ps.setString(1, newFlightNumber);
+                rs = ps.executeQuery();
+
+                if (rs.next()) {
+                    newFlightId = rs.getInt("flight_id");
+                } else {
+                    request.setAttribute("message", "Error: No flight found with number " + newFlightNumber);
+                    request.getRequestDispatcher("repEditReservation.jsp").forward(request, response);
+                    return;
+                }
+            }
+
+            // Build dynamic update query
             StringBuilder query = new StringBuilder("UPDATE bookings SET ");
             boolean setNeeded = false;
 
-            if (newFlightId != null && !newFlightId.isEmpty()) {
+            if (newFlightId != null) {
                 query.append("flight_id = ?");
                 setNeeded = true;
             }
@@ -75,8 +96,8 @@ public class RepEditReservationServlet extends HttpServlet {
             ps = con.prepareStatement(query.toString());
 
             int index = 1;
-            if (newFlightId != null && !newFlightId.isEmpty()) {
-                ps.setInt(index++, Integer.parseInt(newFlightId));
+            if (newFlightId != null) {
+                ps.setInt(index++, newFlightId);
             }
             if (newClass != null && !newClass.isEmpty()) {
                 ps.setString(index++, newClass);

@@ -20,6 +20,7 @@ public class AirportFlightServlet extends HttpServlet {
         request.setAttribute("message", "Showing flights for airport: " + airportCode);
 
         Connection con = null;
+
         try {
             ApplicationDB db = new ApplicationDB();
             con = db.getConnection();
@@ -27,43 +28,56 @@ public class AirportFlightServlet extends HttpServlet {
             List<Map<String, String>> departing = new ArrayList<>();
             List<Map<String, String>> arriving = new ArrayList<>();
 
-            PreparedStatement ps1 = con.prepareStatement("""
-                SELECT flight_id, airline, to_airport, departure_date, departure_time
+            // Departing flights
+            String departureQuery = """
+                SELECT flight_number, airline, to_airport, departure_date, departure_time
                 FROM flights WHERE from_airport = ?
-            """);
-            ps1.setString(1, airportCode);
-            ResultSet rs1 = ps1.executeQuery();
-            while (rs1.next()) {
-                Map<String, String> f = new HashMap<>();
-                f.put("flight_id", rs1.getString("flight_id"));
-                f.put("airline", rs1.getString("airline"));
-                f.put("to_airport", rs1.getString("to_airport"));
-                f.put("departure_date", rs1.getString("departure_date"));
-                f.put("departure_time", rs1.getString("departure_time"));
-                departing.add(f);
+            """;
+            try (PreparedStatement ps = con.prepareStatement(departureQuery)) {
+                ps.setString(1, airportCode);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, String> flight = new HashMap<>();
+                        flight.put("flight_number", rs.getString("flight_number"));
+                        flight.put("airline", rs.getString("airline"));
+                        flight.put("to_airport", rs.getString("to_airport"));
+                        flight.put("departure_date", rs.getString("departure_date"));
+                        flight.put("departure_time", rs.getString("departure_time"));
+                        departing.add(flight);
+                    }
+                }
             }
 
-            PreparedStatement ps2 = con.prepareStatement("""
-                SELECT flight_id, airline, from_airport, departure_date, arrival_time
+            // Arriving flights
+            String arrivalQuery = """
+                SELECT flight_number, airline, from_airport, departure_date, arrival_time
                 FROM flights WHERE to_airport = ?
-            """);
-            ps2.setString(1, airportCode);
-            ResultSet rs2 = ps2.executeQuery();
-            while (rs2.next()) {
-                Map<String, String> f = new HashMap<>();
-                f.put("flight_id", rs2.getString("flight_id"));
-                f.put("airline", rs2.getString("airline"));
-                f.put("from_airport", rs2.getString("from_airport"));
-                f.put("departure_date", rs2.getString("departure_date"));
-                f.put("arrival_time", rs2.getString("arrival_time"));
-                arriving.add(f);
+            """;
+            try (PreparedStatement ps = con.prepareStatement(arrivalQuery)) {
+                ps.setString(1, airportCode);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Map<String, String> flight = new HashMap<>();
+                        flight.put("flight_number", rs.getString("flight_number"));
+                        flight.put("airline", rs.getString("airline"));
+                        flight.put("from_airport", rs.getString("from_airport"));
+                        flight.put("departure_date", rs.getString("departure_date"));
+                        flight.put("arrival_time", rs.getString("arrival_time"));
+                        arriving.add(flight);
+                    }
+                }
             }
 
             request.setAttribute("departingFlights", departing);
             request.setAttribute("arrivingFlights", arriving);
 
+            if (departing.isEmpty() && arriving.isEmpty()) {
+                request.setAttribute("message", "No flights found for airport: " + airportCode);
+            }
+
         } catch (Exception e) {
             request.setAttribute("message", "Error: " + e.getMessage());
+            e.printStackTrace();
         } finally {
             try { if (con != null) con.close(); } catch (Exception ignored) {}
         }
