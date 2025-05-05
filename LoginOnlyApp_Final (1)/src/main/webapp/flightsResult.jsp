@@ -94,10 +94,11 @@
         </form>
     </div>
 
-    <!-- Flight Results -->
+    <!-- Departure Flights -->
     <h2>Departure Flights</h2>
     <%
         List<Map<String, String>> departureFlights = (List<Map<String, String>>) request.getAttribute("departureFlights");
+        List<Map<String, String>> returnFlights = (List<Map<String, String>>) request.getAttribute("returnFlights");
 
         String maxPriceStr = request.getParameter("maxPrice");
         String stopsStr = request.getParameter("stops");
@@ -119,29 +120,23 @@
                     flight.put("duration", "N/A");
                 }
             }
-        }
 
-        if (maxPriceStr != null || stopsStr != null || (airlineFilter != null && !airlineFilter.isEmpty())) {
-            departureFlights = departureFlights.stream().filter(flight -> {
-                boolean matches = true;
-                if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
-                    matches &= Double.parseDouble(flight.get("price")) <= Double.parseDouble(maxPriceStr);
-                }
-                if (stopsStr != null && !stopsStr.isEmpty()) {
-                    matches &= Integer.parseInt(flight.get("stops")) == Integer.parseInt(stopsStr);
-                }
-                if (airlineFilter != null && !airlineFilter.isEmpty()) {
-                    matches &= flight.get("airline").toLowerCase().contains(airlineFilter.toLowerCase());
-                }
-                return matches;
-            }).collect(Collectors.toList());
-        }
+            if (maxPriceStr != null || stopsStr != null || (airlineFilter != null && !airlineFilter.isEmpty())) {
+                departureFlights = departureFlights.stream().filter(flight -> {
+                    boolean matches = true;
+                    if (maxPriceStr != null && !maxPriceStr.isEmpty()) {
+                        matches &= Double.parseDouble(flight.get("price")) <= Double.parseDouble(maxPriceStr);
+                    }
+                    if (stopsStr != null && !stopsStr.isEmpty()) {
+                        matches &= Integer.parseInt(flight.get("stops")) == Integer.parseInt(stopsStr);
+                    }
+                    if (airlineFilter != null && !airlineFilter.isEmpty()) {
+                        matches &= flight.get("airline").toLowerCase().contains(airlineFilter.toLowerCase());
+                    }
+                    return matches;
+                }).collect(Collectors.toList());
+            }
 
-        if (departureFlights == null || departureFlights.isEmpty()) {
-    %>
-        <p>No departure flights found.</p>
-    <%
-        } else {
             for (Map<String, String> flight : departureFlights) {
     %>
         <div class="flight-card">
@@ -166,6 +161,58 @@
         </div>
     <%
             }
+        } else {
+    %>
+        <p>No departure flights found.</p>
+    <%
+        }
+    %>
+
+    <!-- Return Flights -->
+    <h2>Return Flights</h2>
+    <%
+        if (returnFlights != null && !returnFlights.isEmpty()) {
+            for (Map<String, String> flight : returnFlights) {
+                try {
+                    String depTime = flight.get("departure_time");
+                    String arrTime = flight.get("arrival_time");
+                    if (depTime != null && arrTime != null) {
+                        LocalTime dep = LocalTime.parse(depTime);
+                        LocalTime arr = LocalTime.parse(arrTime);
+                        Duration dur = Duration.between(dep, arr);
+                        if (dur.isNegative()) dur = dur.plusHours(24);
+                        flight.put("duration", String.format("%d:%02d", dur.toHours(), dur.toMinutesPart()));
+                    }
+                } catch (Exception e) {
+                    flight.put("duration", "N/A");
+                }
+    %>
+        <div class="flight-card">
+            <strong><%= flight.get("airline") %></strong> |
+            <%= flight.get("from_airport") %> -> <%= flight.get("to_airport") %><br>
+            Departure: <%= flight.get("departure_date") %> at <%= flight.get("departure_time") %><br>
+            Arrival: <%= flight.get("arrival_time") %><br>
+            Price: $<%= flight.get("price") %> |
+            Stops: <%= flight.get("stops") %> |
+            Duration: <%= flight.get("duration") %>
+
+            <form action="bookFlight.jsp" method="get">
+                <input type="hidden" name="flightId" value="<%= flight.get("flight_id") %>">
+                <label for="ticketClass">Seat Class:</label>
+                <select name="ticketClass" required>
+                    <option value="Economy">Economy</option>
+                    <option value="Business">Business (+$100)</option>
+                    <option value="First">First (+$200)</option>
+                </select><br><br>
+                <input type="submit" value="Book This Flight">
+            </form>
+        </div>
+    <%
+            }
+        } else {
+    %>
+        <p>No return flights found.</p>
+    <%
         }
     %>
 
