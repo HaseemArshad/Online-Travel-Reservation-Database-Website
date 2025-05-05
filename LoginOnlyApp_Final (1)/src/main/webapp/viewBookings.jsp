@@ -125,48 +125,24 @@
     <%
         } else {
             for (Map<String, String> booking : bookingsList) {
-                String bookingId = booking.get("booking_id");
-                String flightId = booking.get("flight_id");
-                String price = booking.get("price");
-                String ticketClass = booking.get("ticket_class") != null ? booking.get("ticket_class") : "N/A";
     %>
         <div class="booking-card">
-            Booking ID: <%= bookingId %> |
+            Booking ID: <%= booking.get("booking_id") %> |
             <%= booking.get("airline") %> |
             <%= booking.get("from_airport") %> -> <%= booking.get("to_airport") %> |
             Date: <%= booking.get("departure_date") %> |
-            Time: <%= booking.get("departure_time") %> 
-            <%
-                if ("canceled".equals(currentFilter)) {
-            %>
-                | Canceled On: <%= booking.get("cancel_date") %>
-            <%
-                } else if ("upcoming".equals(currentFilter)) {
-            %>
-                <br/>
-                Class:
-                <select onchange="updatePrice(<%= flightId %>, <%= price %>)" 
-                        name="ticketClass_<%= flightId %>">
-                    <option value="Economy" <%= ticketClass.equalsIgnoreCase("economy") ? "selected" : "" %>>Economy</option>
-                    <option value="Business" <%= ticketClass.equalsIgnoreCase("business") ? "selected" : "" %>>Business (+$100)</option>
-                    <option value="First" <%= ticketClass.equalsIgnoreCase("first") ? "selected" : "" %>>First (+$200)</option>
-                </select>
-                |
-                Price: $<span id="price_<%= flightId %>"><%= price %></span>
+            Time: <%= booking.get("departure_time") %> |
+            Price: $<%= booking.get("price") %> |
+            Class: <%= booking.get("ticket_class") != null ? booking.get("ticket_class") : "N/A" %>
 
+            <% if ("canceled".equals(currentFilter)) { %>
+                | Canceled On: <%= booking.get("cancel_date") %>
+            <% } else if ("upcoming".equals(currentFilter)) { %>
                 <form action="cancelBooking" method="post">
-                    <input type="hidden" name="bookingId" value="<%= bookingId %>">
+                    <input type="hidden" name="bookingId" value="<%= booking.get("booking_id") %>">
                     <input type="submit" value="Cancel Booking">
                 </form>
-            <%
-                } else {
-            %>
-                |
-                Class: <%= ticketClass %> |
-                Price: $<%= price %>
-            <%
-                }
-            %>
+            <% } %>
         </div>
     <%
             }
@@ -175,23 +151,5 @@
 
     <a href="home.jsp"> Back to Home</a>
 </div>
-
-<script>
-    function updatePrice(flightId, basePrice) {
-        const select = document.querySelector(`select[name='ticketClass_${flightId}']`);
-        const selectedClass = select.value;
-        let adjustment = 0;
-
-        if (selectedClass === "Business") {
-            adjustment = 100;
-        } else if (selectedClass === "First") {
-            adjustment = 200;
-        }
-
-        const finalPrice = parseFloat(basePrice) + adjustment;
-        document.getElementById(`price_${flightId}`).innerText = finalPrice.toFixed(2);
-    }
-</script>
-
 </body>
 </html>

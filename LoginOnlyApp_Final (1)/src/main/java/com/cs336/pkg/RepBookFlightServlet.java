@@ -1,7 +1,9 @@
 package com.cs336.pkg;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -33,6 +35,7 @@ public class RepBookFlightServlet extends HttpServlet {
             ps = con.prepareStatement(userQuery);
             ps.setString(1, username);
             rs = ps.executeQuery();
+
             if (!rs.next()) {
                 request.setAttribute("message", "❌ Error: User not found.");
                 request.getRequestDispatcher("repBookFlight.jsp").forward(request, response);
@@ -42,54 +45,33 @@ public class RepBookFlightServlet extends HttpServlet {
             rs.close();
             ps.close();
 
-            // Get flight ID and capacity
-            String flightQuery = "SELECT flight_id, capacity FROM flights WHERE flight_number = ?";
+            // Get flight ID using flight_number
+            String flightQuery = "SELECT flight_id FROM flights WHERE flight_number = ?";
             ps = con.prepareStatement(flightQuery);
             ps.setString(1, flightNumber);
             rs = ps.executeQuery();
+
             if (!rs.next()) {
                 request.setAttribute("message", "❌ Error: Flight number " + flightNumber + " does not exist.");
                 request.getRequestDispatcher("repBookFlight.jsp").forward(request, response);
                 return;
             }
             int flightId = rs.getInt("flight_id");
-            int capacity = rs.getInt("capacity");
             rs.close();
             ps.close();
 
-            // Count current bookings
-            String countQuery = "SELECT COUNT(*) AS booked FROM bookings WHERE flight_id = ?";
-            ps = con.prepareStatement(countQuery);
-            ps.setInt(1, flightId);
-            rs = ps.executeQuery();
-            int booked = 0;
-            if (rs.next()) booked = rs.getInt("booked");
-            rs.close();
-            ps.close();
+            // Book the flight
+            String insertQuery = "INSERT INTO bookings (user_id, flight_id, ticket_class) VALUES (?, ?, ?)";
+            ps = con.prepareStatement(insertQuery);
+            ps.setInt(1, userId);
+            ps.setInt(2, flightId);
+            ps.setString(3, seatClass);
 
-            String message;
+            int result = ps.executeUpdate();
 
-            if (booked >= capacity) {
-                // Add to waitlist
-                String waitlistQuery = "INSERT INTO waiting_list (user_id, flight_id) VALUES (?, ?)";
-                ps = con.prepareStatement(waitlistQuery);
-                ps.setInt(1, userId);
-                ps.setInt(2, flightId);
-                ps.executeUpdate();
-                message = "⚠️ Flight is full. User " + username + " has been added to the waitlist for flight " + flightNumber + ".";
-            } else {
-                // Book the flight
-                String insertQuery = "INSERT INTO bookings (user_id, flight_id, ticket_class) VALUES (?, ?, ?)";
-                ps = con.prepareStatement(insertQuery);
-                ps.setInt(1, userId);
-                ps.setInt(2, flightId);
-                ps.setString(3, seatClass);
-                int result = ps.executeUpdate();
-
-                message = (result > 0)
-                        ? "✅ Successfully booked flight " + flightNumber + " for user " + username
-                        : "❌ Booking failed. Please try again.";
-            }
+            String message = (result > 0)
+                    ? "✅ Successfully booked flight " + flightNumber + " for user " + username
+                    : "❌ Booking failed. Please try again.";
 
             request.setAttribute("message", message);
             request.getRequestDispatcher("repBookFlight.jsp").forward(request, response);

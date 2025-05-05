@@ -74,7 +74,6 @@ public class FlightSearchServlet extends HttpServlet {
                 departureFlights.add(flight);
             }
 
-            // 👇 Load return flights only if roundtrip
             if ("roundtrip".equalsIgnoreCase(tripType) && !returnDate.isEmpty()) {
                 PreparedStatement returnStmt = conn.prepareStatement(sql);
                 returnStmt.setString(1, toAirport);
@@ -104,7 +103,6 @@ public class FlightSearchServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // ✅ Always set these for JSP use
         request.setAttribute("departureFlights", departureFlights);
         request.setAttribute("returnFlights", returnFlights);
         request.setAttribute("tripType", tripType);
@@ -112,8 +110,6 @@ public class FlightSearchServlet extends HttpServlet {
         request.setAttribute("toAirport", toAirport);
         request.setAttribute("departureDate", departureDate);
         request.setAttribute("returnDate", returnDate);
-        request.setAttribute("sortBy", sortBy);
-        request.setAttribute("flexibleDates", flexibleDates ? "true" : "false");
 
         RequestDispatcher rd = request.getRequestDispatcher("flightsResult.jsp");
         rd.forward(request, response);
