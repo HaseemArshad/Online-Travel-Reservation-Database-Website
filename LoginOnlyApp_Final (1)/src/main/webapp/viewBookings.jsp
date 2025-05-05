@@ -75,17 +75,16 @@
                 <input type="hidden" name="flightId" value="<%= flightId %>">
                 <input type="hidden" name="ticketClass" value="economy">
                 <input type="hidden" name="price" value="0">
+                <input type="hidden" name="fromWaitlist" value="true">
                 <button type="submit">Book Now</button>
             </form>
         </div>
     <%
             }
         }
-    %>
 
-    <% 
         String msg = (String) session.getAttribute("message");
-        if (msg != null) { 
+        if (msg != null) {
     %>
         <p style="color:green;"><%= msg %></p>
     <%
@@ -112,8 +111,8 @@
     </div>
 
     <h3>
-        <%= currentFilter.equals("upcoming") ? "Upcoming Flights" : 
-             currentFilter.equals("past") ? "Past Flights" : 
+        <%= currentFilter.equals("upcoming") ? "Upcoming Flights" :
+             currentFilter.equals("past") ? "Past Flights" :
              "Canceled Flights" %>
     </h3>
 
@@ -127,29 +126,48 @@
             for (Map<String, String> booking : bookingsList) {
     %>
         <div class="booking-card">
+        <%
+            if ("canceled".equals(currentFilter)) {
+        %>
             Booking ID: <%= booking.get("booking_id") %> |
             <%= booking.get("airline") %> |
             <%= booking.get("from_airport") %> -> <%= booking.get("to_airport") %> |
             Date: <%= booking.get("departure_date") %> |
             Time: <%= booking.get("departure_time") %> |
             Price: $<%= booking.get("price") %> |
-            Class: <%= booking.get("ticket_class") != null ? booking.get("ticket_class") : "N/A" %>
+            Class: <%= booking.get("ticket_class") %> |
+            Canceled On: <%= booking.get("cancel_date") %>
+        <%
+            } else {
+        %>
+        	Ticket ID: <%= booking.get("ticket_id") %> |
+            Flight: <%= booking.get("flight_number") %> (<%= booking.get("airline") %>) |
+            From: <%= booking.get("from_airport") %> |
+            To: <%= booking.get("to_airport") %> |
+            Departure: <%= booking.get("departure_date") %> at <%= booking.get("departure_time") %> |
+            Arrival: <%= booking.get("arrival_date") %> at <%= booking.get("arrival_time") %> |
+            Seat: <%= booking.get("seat_number") %> |
+            Class: <%= booking.get("class") %> |
+            Passenger: <%= booking.get("first_name") %> <%= booking.get("last_name") %> |
+            Fare: $<%= booking.get("total_fare") %> |
+            Purchased On: <%= booking.get("purchase_date") %>
 
-            <% if ("canceled".equals(currentFilter)) { %>
-                | Canceled On: <%= booking.get("cancel_date") %>
-            <% } else if ("upcoming".equals(currentFilter)) { %>
+            <% if ("upcoming".equals(currentFilter)) { %>
                 <form action="cancelBooking" method="post">
                     <input type="hidden" name="bookingId" value="<%= booking.get("booking_id") %>">
                     <input type="submit" value="Cancel Booking">
                 </form>
             <% } %>
+        <%
+            }
+        %>
         </div>
     <%
             }
         }
     %>
 
-    <a href="home.jsp"> Back to Home</a>
+    <a href="home.jsp">Back to Home</a>
 </div>
 </body>
 </html>
