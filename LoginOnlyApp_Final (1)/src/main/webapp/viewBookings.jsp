@@ -140,17 +140,28 @@
         <%
             } else {
         %>
-        	Ticket ID: <%= booking.get("ticket_id") %> |
-            Flight: <%= booking.get("flight_number") %> (<%= booking.get("airline") %>) |
-            From: <%= booking.get("from_airport") %> |
-            To: <%= booking.get("to_airport") %> |
-            Departure: <%= booking.get("departure_date") %> at <%= booking.get("departure_time") %> |
-            Arrival: <%= booking.get("arrival_date") %> at <%= booking.get("arrival_time") %> |
-            Seat: <%= booking.get("seat_number") %> |
-            Class: <%= booking.get("class") %> |
-            Passenger: <%= booking.get("first_name") %> <%= booking.get("last_name") %> |
-            Fare: $<%= booking.get("total_fare") %> |
-            Purchased On: <%= booking.get("purchase_date") %>
+            Booking ID: <%= booking.get("booking_id") %> |
+            Class: <%= booking.get("ticket_class") %> |
+            Booked On: <%= booking.get("booking_date") %><br>
+
+            <strong>Outbound:</strong>
+            <%= booking.get("out_num") %> (
+            <%= booking.get("out_airline") %>) :
+            <%= booking.get("out_from") %> -> <%= booking.get("out_to") %> on
+            <%= booking.get("out_dep_date") %> at <%= booking.get("out_dep_time") %>
+            / <%= booking.get("out_arr_date") %> at <%= booking.get("out_arr_time") %>
+            <br>
+
+            <strong>Return:</strong>
+            <% if (booking.get("ret_num") != null) { %>
+              <%= booking.get("ret_num") %> (
+              <%= booking.get("ret_airline") %>) :
+              <%= booking.get("ret_from") %> -> <%= booking.get("ret_to") %> on
+              <%= booking.get("ret_dep_date") %> at <%= booking.get("ret_dep_time") %>
+              / <%= booking.get("ret_arr_date") %> at <%= booking.get("ret_arr_time") %>
+            <% } else { %>
+              —
+            <% } %>
 
             <% if ("upcoming".equals(currentFilter)) { %>
                 <form action="cancelBooking" method="post">

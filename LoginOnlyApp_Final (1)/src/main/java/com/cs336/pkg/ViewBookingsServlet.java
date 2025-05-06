@@ -7,9 +7,11 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 
 public class ViewBookingsServlet extends HttpServlet {
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession();
-        Integer userId = (Integer) session.getAttribute("userId");
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        HttpSession session = request.getSession(false);
+        Integer userId = (session == null) ? null : (Integer) session.getAttribute("userId");
 
         if (userId == null) {
             response.getWriter().println("You must be logged in to view bookings.");
@@ -25,27 +27,34 @@ public class ViewBookingsServlet extends HttpServlet {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
-            String sql = "";
-
+            String sql;
             if ("canceled".equals(filter)) {
-                sql = "SELECT cb.booking_id, f.airline, f.from_airport, f.to_airport, f.departure_date, f.departure_time, f.price, cb.cancel_date, cb.ticket_class, f.flight_id " +
-                      "FROM canceled_bookings cb JOIN flights f ON cb.flight_id = f.flight_id " +
-                      "WHERE cb.user_id = ? ORDER BY cb.cancel_date DESC";
+                sql = ""
+                  + "SELECT cb.booking_id, cb.ticket_class, cb.cancel_date, "
+                  + "       f.flight_number, f.airline, f.from_airport, f.to_airport, "
+                  + "       f.departure_date, f.departure_time, f.arrival_date, f.arrival_time "
+                  + "FROM canceled_bookings cb "
+                  + "  JOIN flights f ON cb.flight_id = f.flight_id "
+                  + "WHERE cb.user_id = ? "
+                  + "ORDER BY cb.cancel_date DESC";
             } else {
-                sql = "SELECT t.*, b.booking_id, f.from_airport, f.to_airport " +
-                      "FROM ticket t " +
-                      "JOIN bookings b ON t.user_id = b.user_id AND t.flight_number = " +
-                      "  (SELECT flight_number FROM flights WHERE flight_id = b.flight_id) " +
-                      "JOIN flights f ON t.flight_number = f.flight_number AND t.airline_code = f.airline " +
-                      "WHERE t.user_id = ? ";
-
-                if ("upcoming".equals(filter)) {
-                    sql += "AND f.departure_date >= CURDATE() ";
-                } else if ("past".equals(filter)) {
-                    sql += "AND f.departure_date < CURDATE() ";
-                }
-
-                sql += "ORDER BY f.departure_date ASC";
+                // upcoming or past: join bookings → flights twice for round‑trip
+                sql = ""
+                  + "SELECT b.booking_id, b.ticket_class, b.booking_date, "
+                  + "       f1.flight_number AS out_num, f1.airline AS out_airline, f1.from_airport AS out_from, f1.to_airport AS out_to, "
+                  + "       f1.departure_date AS out_dep_date, f1.departure_time AS out_dep_time, "
+                  + "       f1.arrival_date   AS out_arr_date, f1.arrival_time   AS out_arr_time, "
+                  + "       f2.flight_number AS ret_num, f2.airline AS ret_airline, f2.from_airport AS ret_from, f2.to_airport AS ret_to, "
+                  + "       f2.departure_date AS ret_dep_date, f2.departure_time AS ret_dep_time, "
+                  + "       f2.arrival_date   AS ret_arr_date, f2.arrival_time   AS ret_arr_time "
+                  + "FROM bookings b "
+                  + "  JOIN flights f1 ON b.outbound_flight_id = f1.flight_id "
+                  + "  LEFT JOIN flights f2 ON b.return_flight_id   = f2.flight_id "
+                  + "WHERE b.user_id = ? "
+                  + (filter.equals("past")
+                        ? "AND f1.departure_date < CURDATE() "
+                        : "AND f1.departure_date >= CURDATE() ")
+                  + "ORDER BY f1.departure_date ASC";
             }
 
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -56,70 +65,50 @@ public class ViewBookingsServlet extends HttpServlet {
                 Map<String, String> booking = new HashMap<>();
 
                 if ("canceled".equals(filter)) {
-                    booking.put("booking_id", rs.getString("booking_id"));
-                    booking.put("airline", rs.getString("airline"));
+                    booking.put("booking_id",   rs.getString("booking_id"));
+                    booking.put("ticket_class", rs.getString("ticket_class"));
+                    booking.put("cancel_date",  rs.getString("cancel_date"));
+                    booking.put("flight_number",rs.getString("flight_number"));
+                    booking.put("airline",      rs.getString("airline"));
                     booking.put("from_airport", rs.getString("from_airport"));
-                    booking.put("to_airport", rs.getString("to_airport"));
-                    booking.put("departure_date", rs.getString("departure_date"));
-                    booking.put("departure_time", rs.getString("departure_time"));
-                    double basePrice = rs.getDouble("price");
-                    String ticketClass = rs.getString("ticket_class");
-                    double adjustment = 0.0;
-
-                    if ("business".equalsIgnoreCase(ticketClass)) {
-                        adjustment = 100.0;
-                    } else if ("first".equalsIgnoreCase(ticketClass)) {
-                        adjustment = 200.0;
-                    }
-
-                    double finalPrice = basePrice + adjustment;
-                    booking.put("price", String.format("%.2f", finalPrice));
-                    booking.put("ticket_class", ticketClass);
-                    booking.put("flight_id", rs.getString("flight_id"));
-                    booking.put("cancel_date", rs.getString("cancel_date"));
+                    booking.put("to_airport",   rs.getString("to_airport"));
+                    booking.put("departure_date",rs.getString("departure_date"));
+                    booking.put("departure_time",rs.getString("departure_time"));
+                    booking.put("arrival_date",  rs.getString("arrival_date"));
+                    booking.put("arrival_time",  rs.getString("arrival_time"));
                 } else {
-                	booking.put("ticket_id", rs.getString("ticket_id"));
-                    booking.put("flight_number", rs.getString("flight_number"));
-                    booking.put("airline", rs.getString("airline_code"));
-                    booking.put("from_airport", rs.getString("from_airport"));
-                    booking.put("to_airport", rs.getString("to_airport"));
-                    booking.put("departure_date", rs.getString("departure_date"));
-                    booking.put("departure_time", rs.getString("departure_time"));
-                    booking.put("arrival_date", rs.getString("arrival_date"));
-                    booking.put("arrival_time", rs.getString("arrival_time"));
-                    booking.put("seat_number", rs.getString("seat_number"));
-                    booking.put("class", rs.getString("class"));
-                    booking.put("first_name", rs.getString("customer_first_name"));
-                    booking.put("last_name", rs.getString("customer_last_name"));
-                    booking.put("user_id", String.valueOf(userId));
-                    booking.put("total_fare", rs.getString("total_fare"));
-                    booking.put("purchase_date", rs.getString("purchase_date"));
-                    booking.put("booking_id", rs.getString("booking_id"));
+                    booking.put("booking_id",    rs.getString("booking_id"));
+                    booking.put("ticket_class",  rs.getString("ticket_class"));
+                    booking.put("booking_date",  rs.getString("booking_date"));
+
+                    // outbound leg
+                    booking.put("out_num",       rs.getString("out_num"));
+                    booking.put("out_airline",   rs.getString("out_airline"));
+                    booking.put("out_from",      rs.getString("out_from"));
+                    booking.put("out_to",        rs.getString("out_to"));
+                    booking.put("out_dep_date",  rs.getString("out_dep_date"));
+                    booking.put("out_dep_time",  rs.getString("out_dep_time"));
+                    booking.put("out_arr_date",  rs.getString("out_arr_date"));
+                    booking.put("out_arr_time",  rs.getString("out_arr_time"));
+
+                    // return leg (may be null)
+                    booking.put("ret_num",       rs.getString("ret_num"));
+                    booking.put("ret_airline",   rs.getString("ret_airline"));
+                    booking.put("ret_from",      rs.getString("ret_from"));
+                    booking.put("ret_to",        rs.getString("ret_to"));
+                    booking.put("ret_dep_date",  rs.getString("ret_dep_date"));
+                    booking.put("ret_dep_time",  rs.getString("ret_dep_time"));
+                    booking.put("ret_arr_date",  rs.getString("ret_arr_date"));
+                    booking.put("ret_arr_time",  rs.getString("ret_arr_time"));
                 }
 
                 bookingsList.add(booking);
             }
 
-            // Check waitlist availability
-            Map<Integer, Boolean> seatAvailableMap = new HashMap<>();
-
-            PreparedStatement psWaitlist = conn.prepareStatement(
-                "SELECT flight_id FROM waiting_list WHERE user_id = ?");
-            psWaitlist.setInt(1, userId);
-            ResultSet rsWaitlist = psWaitlist.executeQuery();
-
-            while (rsWaitlist.next()) {
-                int flightId = rsWaitlist.getInt("flight_id");
-                if (db.flightHasSeatAvailable(flightId)) {
-                    seatAvailableMap.put(flightId, true);
-                }
-            }
-
-            if (!seatAvailableMap.isEmpty()) {
-                request.setAttribute("seatAvailableMap", seatAvailableMap);
-            }
-
+            rs.close();
+            ps.close();
             conn.close();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
