@@ -41,7 +41,7 @@
             while (rs.next()) {
                 found = true;
     %>
-                <div style="margin-bottom: 20px;">
+                <div style="margin-bottom: 30px;">
                     <strong>Q: <%= rs.getString("question") %></strong><br>
                     <%
                         String answer = rs.getString("answer");
