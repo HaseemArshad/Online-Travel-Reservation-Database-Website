@@ -1,10 +1,17 @@
 package com.cs336.pkg;
 
 import java.io.IOException;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+
 
 public class BookFlightServlet extends HttpServlet {
 
@@ -42,8 +49,8 @@ public class BookFlightServlet extends HttpServlet {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
+            // Generate a unique booking group ID for roundtrip or multi-leg bookings
             Integer bookingGroupId = null;
-
             for (String flightIdStr : flightIds) {
                 if (flightIdStr == null || flightIdStr.isEmpty()) continue;
                 int flightId = Integer.parseInt(flightIdStr);
@@ -55,9 +62,9 @@ public class BookFlightServlet extends HttpServlet {
                 if (rsFlight.next()) {
                     String flightNumber = rsFlight.getString("flight_number");
                     String airlineCode = rsFlight.getString("airline");
-                    Date departureDate = rsFlight.getDate("departure_date");
+                    java.sql.Date departureDate = rsFlight.getDate("departure_date");
                     Time departureTime = rsFlight.getTime("departure_time");
-                    Date arrivalDate = rsFlight.getDate("arrival_date");
+                    java.sql.Date arrivalDate = rsFlight.getDate("arrival_date");
                     Time arrivalTime = rsFlight.getTime("arrival_time");
                     int capacity = rsFlight.getInt("capacity");
                     double basePrice = rsFlight.getDouble("price");
@@ -67,7 +74,7 @@ public class BookFlightServlet extends HttpServlet {
                     else if ("First".equalsIgnoreCase(ticketClass)) adjustment = 200.0;
                     double totalFare = basePrice + adjustment;
                     double bookingFee = totalFare * 0.10;
-                    Date today = new Date(System.currentTimeMillis());
+                    java.sql.Date today = new java.sql.Date(System.currentTimeMillis());
 
                     PreparedStatement checkStmt = conn.prepareStatement("SELECT COUNT(*) AS count FROM bookings WHERE flight_id = ?");
                     checkStmt.setInt(1, flightId);
@@ -84,25 +91,41 @@ public class BookFlightServlet extends HttpServlet {
                         waitStmt.executeUpdate();
                         waitStmt.close();
                     } else {
-                        PreparedStatement bookStmt = conn.prepareStatement(
-                            "INSERT INTO bookings (user_id, flight_id, ticket_class, booking_group_id) VALUES (?, ?, ?, ?)",
-                            Statement.RETURN_GENERATED_KEYS);
-                        bookStmt.setInt(1, userId);
-                        bookStmt.setInt(2, flightId);
-                        bookStmt.setString(3, ticketClass);
                         if (bookingGroupId == null) {
-                            bookStmt.setNull(4, Types.INTEGER);
+                            // Insert first booking without group ID and retrieve it
+                            PreparedStatement bookStmt = conn.prepareStatement(
+                                "INSERT INTO bookings (user_id, flight_id, ticket_class) VALUES (?, ?, ?)",
+                                Statement.RETURN_GENERATED_KEYS);
+                            bookStmt.setInt(1, userId);
+                            bookStmt.setInt(2, flightId);
+                            bookStmt.setString(3, ticketClass);
+                            bookStmt.executeUpdate();
+                            ResultSet generatedKeys = bookStmt.getGeneratedKeys();
+                            if (generatedKeys.next()) {
+                                bookingGroupId = generatedKeys.getInt(1); // Use first booking ID as group ID
+                            }
+                            bookStmt.close();
+
+                            // Update the first booking to include group ID
+                            PreparedStatement updateStmt = conn.prepareStatement("UPDATE bookings SET booking_group_id = ? WHERE booking_id = ?");
+                            updateStmt.setInt(1, bookingGroupId);
+                            updateStmt.setInt(2, bookingGroupId);
+                            updateStmt.executeUpdate();
+                            updateStmt.close();
                         } else {
+                            // Insert additional booking with group ID
+                            PreparedStatement bookStmt = conn.prepareStatement(
+                                "INSERT INTO bookings (user_id, flight_id, ticket_class, booking_group_id) VALUES (?, ?, ?, ?)"
+                            );
+                            bookStmt.setInt(1, userId);
+                            bookStmt.setInt(2, flightId);
+                            bookStmt.setString(3, ticketClass);
                             bookStmt.setInt(4, bookingGroupId);
+                            bookStmt.executeUpdate();
+                            bookStmt.close();
                         }
-                        bookStmt.executeUpdate();
 
-                        ResultSet generatedKeys = bookStmt.getGeneratedKeys();
-                        if (generatedKeys.next() && bookingGroupId == null) {
-                            bookingGroupId = generatedKeys.getInt(1);
-                        }
-                        bookStmt.close();
-
+                        // Assign seat number
                         PreparedStatement seatStmt = conn.prepareStatement(
                             "SELECT COUNT(*) AS seat_count FROM ticket WHERE flight_number = ? AND airline_code = ?");
                         seatStmt.setString(1, flightNumber);
@@ -115,7 +138,8 @@ public class BookFlightServlet extends HttpServlet {
 
                         PreparedStatement ticketStmt = conn.prepareStatement(
                             "INSERT INTO ticket (user_id, purchase_date, flight_number, airline_code, departure_date, departure_time, arrival_date, arrival_time, seat_number, customer_first_name, customer_last_name, total_fare, booking_fee, class, booking_group_id) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                        );
                         ticketStmt.setInt(1, userId);
                         ticketStmt.setDate(2, today);
                         ticketStmt.setString(3, flightNumber);

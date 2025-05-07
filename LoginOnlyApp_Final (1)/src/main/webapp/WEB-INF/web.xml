@@ -31,13 +31,14 @@
 
     <!-- View Bookings Servlet -->
     <servlet>
-        <servlet-name>ViewBookingsServlet</servlet-name>
-        <servlet-class>com.cs336.pkg.ViewBookingsServlet</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>ViewBookingsServlet</servlet-name>
-        <url-pattern>/viewBookings</url-pattern>
-    </servlet-mapping>
+    	<servlet-name>ViewBookingsServlet</servlet-name>
+    	<servlet-class>com.cs336.pkg.ViewBookingsServlet</servlet-class>
+	</servlet>
+
+	<servlet-mapping>
+    	<servlet-name>ViewBookingsServlet</servlet-name>
+    	<url-pattern>/viewBookings</url-pattern>
+	</servlet-mapping>
 
     <!-- Cancel Booking Servlet -->
     <servlet>
