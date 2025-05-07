@@ -4,18 +4,9 @@
     <title>My Bookings</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        .container {
-            padding: 20px;
-        }
-
-        .toggle-buttons {
-            margin-bottom: 20px;
-        }
-
-        .toggle-buttons form {
-            display: inline;
-        }
-
+        .container { padding: 20px; }
+        .toggle-buttons { margin-bottom: 20px; }
+        .toggle-buttons form { display: inline; }
         .toggle-buttons button {
             padding: 8px 16px;
             margin-right: 10px;
@@ -24,11 +15,9 @@
             background-color: #e7e7e7;
             border-radius: 4px;
         }
-
         .toggle-buttons button:hover {
             background-color: #d4d4d4;
         }
-
         .booking-card {
             margin-bottom: 15px;
             padding: 12px;
@@ -36,7 +25,6 @@
             border-radius: 6px;
             background-color: #f9f9f9;
         }
-
         .seat-available {
             background-color: #d4edda;
             border: 1px solid #c3e6cb;
@@ -46,12 +34,6 @@
             color: #155724;
             font-weight: bold;
         }
-
-        .booking-card form {
-            display: inline;
-            margin-left: 15px;
-        }
-
         a {
             display: inline-block;
             margin-top: 20px;
@@ -117,52 +99,39 @@
     </h3>
 
     <%
-        List<Map<String, String>> bookingsList = (List<Map<String, String>>) request.getAttribute("bookingsList");
+        List<Map<String, Object>> bookingsList = (List<Map<String, Object>>) request.getAttribute("bookingsList");
         if (bookingsList == null || bookingsList.isEmpty()) {
     %>
         <p>No <%= currentFilter %> bookings.</p>
     <%
         } else {
-            for (Map<String, String> booking : bookingsList) {
+            for (Map<String, Object> booking : bookingsList) {
+                List<Map<String, String>> flights = (List<Map<String, String>>) booking.get("flights");
+                if (flights != null && !flights.isEmpty()) {
     %>
         <div class="booking-card">
-        <%
-            if ("canceled".equals(currentFilter)) {
-        %>
-            Booking ID: <%= booking.get("booking_id") %> |
-            <%= booking.get("airline") %> |
-            <%= booking.get("from_airport") %> -> <%= booking.get("to_airport") %> |
-            Date: <%= booking.get("departure_date") %> |
-            Time: <%= booking.get("departure_time") %> |
-            Price: $<%= booking.get("price") %> |
-            Class: <%= booking.get("ticket_class") %> |
-            Canceled On: <%= booking.get("cancel_date") %>
-        <%
-            } else {
-        %>
-        	Ticket ID: <%= booking.get("ticket_id") %> |
-            Flight: <%= booking.get("flight_number") %> (<%= booking.get("airline") %>) |
-            From: <%= booking.get("from_airport") %> |
-            To: <%= booking.get("to_airport") %> |
-            Departure: <%= booking.get("departure_date") %> at <%= booking.get("departure_time") %> |
-            Arrival: <%= booking.get("arrival_date") %> at <%= booking.get("arrival_time") %> |
-            Seat: <%= booking.get("seat_number") %> |
-            Class: <%= booking.get("class") %> |
-            Passenger: <%= booking.get("first_name") %> <%= booking.get("last_name") %> |
-            Fare: $<%= booking.get("total_fare") %> |
-            Purchased On: <%= booking.get("purchase_date") %>
+            <% for (Map<String, String> f : flights) { %>
+                Flight: <%= f.get("flight_number") %> (<%= f.get("airline_code") %>) |
+                From: <%= f.get("from_airport") %> To: <%= f.get("to_airport") %> |
+                Departure: <%= f.get("departure_date") %> <%= f.get("departure_time") %> |
+                Arrival: <%= f.get("arrival_date") %> <%= f.get("arrival_time") %><br>
+                Class: <%= f.get("class") %> |
+                Seat: <%= f.get("seat_number") %> |
+                Fare: $<%= f.get("total_fare") %> |
+                Purchased On: <%= f.get("purchase_date") %><br><br>
+            <% } %>
+
+            Passenger: <%= flights.get(0).get("customer_first_name") %> <%= flights.get(0).get("customer_last_name") %><br>
 
             <% if ("upcoming".equals(currentFilter)) { %>
                 <form action="cancelBooking" method="post">
-                    <input type="hidden" name="bookingId" value="<%= booking.get("booking_id") %>">
+                    <input type="hidden" name="bookingId" value="<%= flights.get(0).get("booking_id") %>">
                     <input type="submit" value="Cancel Booking">
                 </form>
             <% } %>
-        <%
-            }
-        %>
         </div>
     <%
+                }
             }
         }
     %>

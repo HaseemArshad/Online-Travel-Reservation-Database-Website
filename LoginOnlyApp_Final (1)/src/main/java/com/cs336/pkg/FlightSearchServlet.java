@@ -52,6 +52,7 @@ public class FlightSearchServlet extends HttpServlet {
                 : "departure_date = ?";
             String sql = "SELECT *, TIMEDIFF(arrival_time, departure_time) AS duration FROM flights WHERE from_airport = ? AND to_airport = ? AND " + dateCondition + orderClause;
 
+            // Outbound flights
             PreparedStatement stmt = conn.prepareStatement(sql);
             stmt.setString(1, fromAirport);
             stmt.setString(2, toAirport);
@@ -74,10 +75,11 @@ public class FlightSearchServlet extends HttpServlet {
                 departureFlights.add(flight);
             }
 
+            // Return flights if roundtrip
             if ("roundtrip".equalsIgnoreCase(tripType) && !returnDate.isEmpty()) {
                 PreparedStatement returnStmt = conn.prepareStatement(sql);
-                returnStmt.setString(1, toAirport);
-                returnStmt.setString(2, fromAirport);
+                returnStmt.setString(1, toAirport); // swapped
+                returnStmt.setString(2, fromAirport); // swapped
                 returnStmt.setString(3, returnDate);
                 if (flexibleDates) returnStmt.setString(4, returnDate);
 
@@ -103,6 +105,7 @@ public class FlightSearchServlet extends HttpServlet {
             e.printStackTrace();
         }
 
+        // Set attributes for JSP
         request.setAttribute("departureFlights", departureFlights);
         request.setAttribute("returnFlights", returnFlights);
         request.setAttribute("tripType", tripType);
@@ -111,8 +114,14 @@ public class FlightSearchServlet extends HttpServlet {
         request.setAttribute("departureDate", departureDate);
         request.setAttribute("returnDate", returnDate);
 
-        RequestDispatcher rd = request.getRequestDispatcher("flightsResult.jsp");
-        rd.forward(request, response);
+        // Forward to the right JSP
+        if ("roundtrip".equalsIgnoreCase(tripType)) {
+            RequestDispatcher rd = request.getRequestDispatcher("roundTripResults.jsp");
+            rd.forward(request, response);
+        } else {
+            RequestDispatcher rd = request.getRequestDispatcher("flightsResult.jsp");
+            rd.forward(request, response);
+        }
     }
 
     private String safeTrim(String input) {

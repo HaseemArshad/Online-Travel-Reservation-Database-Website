@@ -19,23 +19,21 @@ public class ViewBookingsServlet extends HttpServlet {
         String filter = request.getParameter("filter");
         if (filter == null) filter = "upcoming";
 
-        List<Map<String, String>> bookingsList = new ArrayList<>();
+        List<Map<String, Object>> bookingsList = new ArrayList<>();
 
         try {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
-            String sql = "";
-
+            String sql;
             if ("canceled".equals(filter)) {
                 sql = "SELECT cb.booking_id, f.airline, f.from_airport, f.to_airport, f.departure_date, f.departure_time, f.price, cb.cancel_date, cb.ticket_class, f.flight_id " +
                       "FROM canceled_bookings cb JOIN flights f ON cb.flight_id = f.flight_id " +
                       "WHERE cb.user_id = ? ORDER BY cb.cancel_date DESC";
             } else {
-                sql = "SELECT t.*, b.booking_id, f.from_airport, f.to_airport " +
+                sql = "SELECT t.*, b.booking_id, b.booking_group_id, f.from_airport, f.to_airport " +
                       "FROM ticket t " +
-                      "JOIN bookings b ON t.user_id = b.user_id AND t.flight_number = " +
-                      "  (SELECT flight_number FROM flights WHERE flight_id = b.flight_id) " +
+                      "JOIN bookings b ON t.user_id = b.user_id AND t.flight_number = (SELECT flight_number FROM flights WHERE flight_id = b.flight_id) " +
                       "JOIN flights f ON t.flight_number = f.flight_number AND t.airline_code = f.airline " +
                       "WHERE t.user_id = ? ";
 
@@ -52,59 +50,67 @@ public class ViewBookingsServlet extends HttpServlet {
             ps.setInt(1, userId);
             ResultSet rs = ps.executeQuery();
 
+            Map<String, List<Map<String, String>>> groupedFlights = new LinkedHashMap<>();
+
             while (rs.next()) {
-                Map<String, String> booking = new HashMap<>();
+                String groupKey = "canceled".equals(filter)
+                    ? rs.getString("booking_id")
+                    : (rs.getString("booking_group_id") != null && !rs.getString("booking_group_id").isEmpty()) 
+                        ? rs.getString("booking_group_id") 
+                        : rs.getString("ticket_id");
+
+                Map<String, String> flight = new HashMap<>();
 
                 if ("canceled".equals(filter)) {
-                    booking.put("booking_id", rs.getString("booking_id"));
-                    booking.put("airline", rs.getString("airline"));
-                    booking.put("from_airport", rs.getString("from_airport"));
-                    booking.put("to_airport", rs.getString("to_airport"));
-                    booking.put("departure_date", rs.getString("departure_date"));
-                    booking.put("departure_time", rs.getString("departure_time"));
+                    flight.put("booking_id", rs.getString("booking_id"));
+                    flight.put("flight_id", rs.getString("flight_id"));
+                    flight.put("airline_code", rs.getString("airline"));
+                    flight.put("from_airport", rs.getString("from_airport"));
+                    flight.put("to_airport", rs.getString("to_airport"));
+                    flight.put("departure_date", rs.getString("departure_date"));
+                    flight.put("departure_time", rs.getString("departure_time"));
+                    flight.put("ticket_class", rs.getString("ticket_class"));
+                    flight.put("cancel_date", rs.getString("cancel_date"));
+
                     double basePrice = rs.getDouble("price");
                     String ticketClass = rs.getString("ticket_class");
                     double adjustment = 0.0;
-
-                    if ("business".equalsIgnoreCase(ticketClass)) {
-                        adjustment = 100.0;
-                    } else if ("first".equalsIgnoreCase(ticketClass)) {
-                        adjustment = 200.0;
-                    }
-
+                    if ("business".equalsIgnoreCase(ticketClass)) adjustment = 100.0;
+                    else if ("first".equalsIgnoreCase(ticketClass)) adjustment = 200.0;
                     double finalPrice = basePrice + adjustment;
-                    booking.put("price", String.format("%.2f", finalPrice));
-                    booking.put("ticket_class", ticketClass);
-                    booking.put("flight_id", rs.getString("flight_id"));
-                    booking.put("cancel_date", rs.getString("cancel_date"));
+                    flight.put("total_fare", String.format("%.2f", finalPrice));
+
                 } else {
-                	booking.put("ticket_id", rs.getString("ticket_id"));
-                    booking.put("flight_number", rs.getString("flight_number"));
-                    booking.put("airline", rs.getString("airline_code"));
-                    booking.put("from_airport", rs.getString("from_airport"));
-                    booking.put("to_airport", rs.getString("to_airport"));
-                    booking.put("departure_date", rs.getString("departure_date"));
-                    booking.put("departure_time", rs.getString("departure_time"));
-                    booking.put("arrival_date", rs.getString("arrival_date"));
-                    booking.put("arrival_time", rs.getString("arrival_time"));
-                    booking.put("seat_number", rs.getString("seat_number"));
-                    booking.put("class", rs.getString("class"));
-                    booking.put("first_name", rs.getString("customer_first_name"));
-                    booking.put("last_name", rs.getString("customer_last_name"));
-                    booking.put("user_id", String.valueOf(userId));
-                    booking.put("total_fare", rs.getString("total_fare"));
-                    booking.put("purchase_date", rs.getString("purchase_date"));
-                    booking.put("booking_id", rs.getString("booking_id"));
+                    flight.put("ticket_id", rs.getString("ticket_id"));
+                    flight.put("flight_number", rs.getString("flight_number"));
+                    flight.put("airline_code", rs.getString("airline_code"));
+                    flight.put("from_airport", rs.getString("from_airport"));
+                    flight.put("to_airport", rs.getString("to_airport"));
+                    flight.put("departure_date", rs.getString("departure_date"));
+                    flight.put("departure_time", rs.getString("departure_time"));
+                    flight.put("arrival_date", rs.getString("arrival_date"));
+                    flight.put("arrival_time", rs.getString("arrival_time"));
+                    flight.put("seat_number", rs.getString("seat_number"));
+                    flight.put("class", rs.getString("class"));
+                    flight.put("customer_first_name", rs.getString("customer_first_name"));
+                    flight.put("customer_last_name", rs.getString("customer_last_name"));
+                    flight.put("total_fare", rs.getString("total_fare"));
+                    flight.put("purchase_date", rs.getString("purchase_date"));
+                    flight.put("booking_id", rs.getString("booking_id"));
                 }
 
-                bookingsList.add(booking);
+                groupedFlights.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(flight);
             }
 
-            // Check waitlist availability
-            Map<Integer, Boolean> seatAvailableMap = new HashMap<>();
+            for (List<Map<String, String>> flightGroup : groupedFlights.values()) {
+                Map<String, Object> bookingEntry = new HashMap<>();
+                bookingEntry.put("flights", flightGroup);
+                bookingsList.add(bookingEntry);
+            }
 
-            PreparedStatement psWaitlist = conn.prepareStatement(
-                "SELECT flight_id FROM waiting_list WHERE user_id = ?");
+            // Waitlist notifications
+            Map<Integer, Boolean> seatAvailableMap = new HashMap<>();
+            PreparedStatement psWaitlist = conn.prepareStatement("SELECT flight_id FROM waiting_list WHERE user_id = ?");
             psWaitlist.setInt(1, userId);
             ResultSet rsWaitlist = psWaitlist.executeQuery();
 
