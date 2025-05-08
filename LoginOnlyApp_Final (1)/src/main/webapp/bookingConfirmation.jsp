@@ -46,7 +46,6 @@
             <strong>Total Fare:</strong> $<%= singleFlight.get("total_fare") %>
         </div>
     <% } else { %>
-        <p>No flight information available.</p>
     <% } %>
 
     <a href="home.jsp">Back to Home</a>

@@ -113,15 +113,16 @@
     %>
         <div class="booking-card">
             <% for (Map<String, String> f : flights) { %>
-                Flight: <%= f.get("flight_number") %> (<%= f.get("airline_code") %>) |
-                From: <%= f.get("from_airport") %> To: <%= f.get("to_airport") %> |
-                Departure: <%= f.get("departure_date") %> <%= f.get("departure_time") %> |
-                Arrival: <%= f.get("arrival_date") %> <%= f.get("arrival_time") %><br>
-                Class: <%= f.get("class") != null ? f.get("class") : f.get("ticket_class") %> |
-                Seat: <%= f.get("seat_number") != null ? f.get("seat_number") : "N/A" %> |
-                Fare: $<%= f.get("total_fare") != null ? f.get("total_fare") : "N/A" %> |
-                Purchased On: <%= f.get("purchase_date") != null ? f.get("purchase_date") : "N/A" %><br><br>
-            <% } %>
+    				User Ticket ID: <%= f.get("ticket_id") != null ? f.get("ticket_id") : "N/A" %><br>
+    				Flight: <%= f.get("flight_number") %> (<%= f.get("airline_code") %>) |
+				    From: <%= f.get("from_airport") %> To: <%= f.get("to_airport") %> |
+				    Departure: <%= f.get("departure_date") %> <%= f.get("departure_time") %> |
+				    Arrival: <%= f.get("arrival_date") %> <%= f.get("arrival_time") %><br>
+				    Class: <%= f.get("class") != null ? f.get("class") : f.get("ticket_class") %> |
+				    Seat: <%= f.get("seat_number") != null ? f.get("seat_number") : "N/A" %> |
+				    Fare: $<%= f.get("total_fare") != null ? f.get("total_fare") : "N/A" %> |
+				    Purchased On: <%= f.get("purchase_date") != null ? f.get("purchase_date") : "N/A" %><br><br>
+				<% } %>
 
             Passenger: <%= flights.get(0).get("customer_first_name") %> <%= flights.get(0).get("customer_last_name") %><br>
 

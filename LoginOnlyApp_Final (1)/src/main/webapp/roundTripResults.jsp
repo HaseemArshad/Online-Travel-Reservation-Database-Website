@@ -10,8 +10,37 @@
 <body>
   <h2>Choose Your Round‑Trip Flights</h2>
 
+  <!-- Sort form -->
+  <form method="get" action="searchFlights">
+    <!-- carry original search context -->
+    <input type="hidden" name="tripType"      value="<%= request.getAttribute("tripType") %>">
+    <input type="hidden" name="fromAirport"   value="<%= request.getParameter("fromAirport") %>">
+    <input type="hidden" name="toAirport"     value="<%= request.getParameter("toAirport") %>">
+    <input type="hidden" name="departureDate" value="<%= request.getAttribute("departureDate") %>">
+    <input type="hidden" name="returnDate"    value="<%= request.getAttribute("returnDate") %>">
+    <input type="hidden" name="flexibleDates" value="<%= request.getParameter("flexibleDates") %>">
+
+    Sort by:
+    <select name="sortBy">
+      <option value="">--</option>
+      <option value="price"          <%= "price".equals(request.getAttribute("sortBy"))          ? "selected" : "" %>>Price</option>
+      <option value="departure_time" <%= "departure_time".equals(request.getAttribute("sortBy")) ? "selected" : "" %>>Depart Time</option>
+      <option value="arrival_time"   <%= "arrival_time".equals(request.getAttribute("sortBy"))   ? "selected" : "" %>>Arrive Time</option>
+      <option value="stops"          <%= "stops".equals(request.getAttribute("sortBy"))          ? "selected" : "" %>>Stops</option>
+      <option value="duration"       <%= "duration".equals(request.getAttribute("sortBy"))       ? "selected" : "" %>>Duration</option>
+    </select>
+
+    <select name="sortOrder">
+      <option value="asc"  <%= "asc".equals(request.getAttribute("sortOrder"))  ? "selected" : "" %>>Asc</option>
+      <option value="desc" <%= "desc".equals(request.getAttribute("sortOrder")) ? "selected" : "" %>>Desc</option>
+    </select>
+
+    <button type="submit">Apply Sort</button>
+  </form>
+  <br/>
+
   <form action="bookFlight" method="post">
-    <!-- Hidden fields to track context -->
+    <!-- Hidden fields to track booking -->
     <input type="hidden" name="departureDate" value="<%= request.getAttribute("departureDate") %>">
     <input type="hidden" name="returnDate"    value="<%= request.getAttribute("returnDate")    %>">
     <input type="hidden" name="tripType"      value="roundtrip">
@@ -19,14 +48,13 @@
     <!-- Ticket class selector -->
     <label>
       Ticket class:
-    <select name="ticketClass">
-    <option value="Economy">Economy</option>
-    <option value="Business">Business (+ $100)</option>
-    <option value="First">First (+ $200)</option>
-	</select>
+      <select name="ticketClass">
+        <option value="Economy">Economy</option>
+        <option value="Business">Business (+ $100)</option>
+        <option value="First">First (+ $200)</option>
+      </select>
     </label>
     <br><br>
-
 
     <!-- Outbound Flights -->
     <h3>Outbound Flights (<%= request.getAttribute("departureDate") %>)</h3>
