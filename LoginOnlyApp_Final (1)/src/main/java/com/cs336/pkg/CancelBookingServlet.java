@@ -12,7 +12,8 @@ public class CancelBookingServlet extends HttpServlet {
         String bookingIdStr = request.getParameter("bookingId");
 
         if (bookingIdStr == null) {
-            response.getWriter().println("No booking selected for cancellation.");
+            request.getSession().setAttribute("message", "❌ No booking selected for cancellation.");
+            response.sendRedirect("viewBookings?filter=upcoming");
             return;
         }
 
@@ -21,119 +22,112 @@ public class CancelBookingServlet extends HttpServlet {
             ApplicationDB db = new ApplicationDB();
             Connection conn = db.getConnection();
 
-            // Step 1: Get booking group and check ticket class
-            String groupId = null;
-            String ticketClass = null;
+            Integer bookingGroupId = null;
             int userId = -1;
 
-            PreparedStatement groupStmt = conn.prepareStatement("SELECT booking_group_id, ticket_class, user_id FROM bookings WHERE booking_id = ?");
-            groupStmt.setInt(1, bookingId);
-            ResultSet rsGroup = groupStmt.executeQuery();
-            if (rsGroup.next()) {
-                groupId = rsGroup.getString("booking_group_id");
-                ticketClass = rsGroup.getString("ticket_class");
-                userId = rsGroup.getInt("user_id");
-            }
-            rsGroup.close();
-            groupStmt.close();
+            // Step 1: Get booking group ID and user ID
+            PreparedStatement getGroupStmt = conn.prepareStatement(
+                "SELECT booking_group_id, user_id FROM bookings WHERE booking_id = ?");
+            getGroupStmt.setInt(1, bookingId);
+            ResultSet rsGroup = getGroupStmt.executeQuery();
 
-            if (ticketClass == null || "economy".equalsIgnoreCase(ticketClass)) {
+            if (rsGroup.next()) {
+                bookingGroupId = rsGroup.getObject("booking_group_id") != null ? rsGroup.getInt("booking_group_id") : null;
+                userId = rsGroup.getInt("user_id");
+            } else {
                 conn.close();
-                request.getSession().setAttribute("message", "❌ Economy class tickets are non-refundable and cannot be cancelled.");
+                request.getSession().setAttribute("message", "❌ Booking not found.");
                 response.sendRedirect("viewBookings?filter=upcoming");
                 return;
             }
+            rsGroup.close();
+            getGroupStmt.close();
 
-            // Step 2: Get all booking_ids in the group
-            List<Integer> bookingIds = new ArrayList<>();
-            if (groupId != null && !groupId.isEmpty()) {
-                PreparedStatement allGroup = conn.prepareStatement("SELECT booking_id FROM bookings WHERE booking_group_id = ?");
-                allGroup.setString(1, groupId);
-                ResultSet rs = allGroup.executeQuery();
-                while (rs.next()) {
-                    bookingIds.add(rs.getInt("booking_id"));
+            // Step 2: Get all bookings in the group
+            PreparedStatement getAllInfo = conn.prepareStatement(
+                "SELECT b.booking_id, b.user_id, b.flight_id, b.ticket_class, b.booking_group_id, " +
+                "f.flight_number, t.seat_number, t.purchase_date, t.total_fare, " +
+                "t.customer_first_name, t.customer_last_name " +
+                "FROM bookings b " +
+                "JOIN flights f ON b.flight_id = f.flight_id " +
+                "JOIN ticket t ON t.user_id = b.user_id AND t.booking_group_id = b.booking_group_id AND t.flight_number = f.flight_number " +
+                "WHERE b.booking_group_id = ?"
+            );
+            getAllInfo.setInt(1, bookingGroupId != null ? bookingGroupId : bookingId);
+            ResultSet rs = getAllInfo.executeQuery();
+
+            List<Integer> bookingIdsToDelete = new ArrayList<>();
+            Set<Integer> flightIdsToNotify = new HashSet<>();
+            String classType = null;
+
+            while (rs.next()) {
+                int id = rs.getInt("booking_id");
+                int flightId = rs.getInt("flight_id");
+                classType = rs.getString("ticket_class");
+
+                if ("economy".equalsIgnoreCase(classType)) {
+                    conn.close();
+                    request.getSession().setAttribute("message", "❌ Only Business and First class bookings can be canceled.");
+                    response.sendRedirect("viewBookings?filter=upcoming");
+                    return;
                 }
-                rs.close();
-                allGroup.close();
-            } else {
-                bookingIds.add(bookingId);
+
+                bookingIdsToDelete.add(id);
+                flightIdsToNotify.add(flightId);
+
+                // Insert into canceled_bookings
+                PreparedStatement insertCancel = conn.prepareStatement(
+                    "INSERT INTO canceled_bookings (booking_id, user_id, flight_id, ticket_class, seat_number, purchase_date, total_fare, customer_first_name, customer_last_name, cancel_date) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                insertCancel.setInt(1, id);
+                insertCancel.setInt(2, rs.getInt("user_id"));
+                insertCancel.setInt(3, flightId);
+                insertCancel.setString(4, classType);
+                insertCancel.setString(5, rs.getString("seat_number"));
+                insertCancel.setDate(6, rs.getDate("purchase_date"));
+                insertCancel.setDouble(7, rs.getDouble("total_fare"));
+                insertCancel.setString(8, rs.getString("customer_first_name"));
+                insertCancel.setString(9, rs.getString("customer_last_name"));
+                insertCancel.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
+                insertCancel.executeUpdate();
+                insertCancel.close();
             }
+            rs.close();
+            getAllInfo.close();
 
-            for (int id : bookingIds) {
-                // Get detailed info
-                PreparedStatement getInfo = conn.prepareStatement(
-                    "SELECT b.user_id, b.flight_id, b.ticket_class, f.flight_number, t.seat_number, t.purchase_date, t.total_fare, t.customer_first_name, t.customer_last_name " +
-                    "FROM bookings b " +
-                    "JOIN flights f ON b.flight_id = f.flight_id " +
-                    "JOIN ticket t ON t.user_id = b.user_id AND t.flight_number = f.flight_number " +
-                    "WHERE b.booking_id = ?");
-                getInfo.setInt(1, id);
-                ResultSet rs = getInfo.executeQuery();
+            // Step 3: Delete all bookings and tickets in the group
+            PreparedStatement deleteBookings = conn.prepareStatement("DELETE FROM bookings WHERE booking_group_id = ?");
+            deleteBookings.setInt(1, bookingGroupId != null ? bookingGroupId : bookingId);
+            deleteBookings.executeUpdate();
+            deleteBookings.close();
 
-                if (rs.next()) {
-                    int flightId = rs.getInt("flight_id");
-                    String classType = rs.getString("ticket_class");
-                    String seatNumber = rs.getString("seat_number");
-                    java.sql.Date purchaseDate = rs.getDate("purchase_date");  // FIXED HERE
-                    double totalFare = rs.getDouble("total_fare");
-                    String firstName = rs.getString("customer_first_name");
-                    String lastName = rs.getString("customer_last_name");
+            PreparedStatement deleteTickets = conn.prepareStatement("DELETE FROM ticket WHERE user_id = ? AND booking_group_id = ?");
+            deleteTickets.setInt(1, userId);
+            deleteTickets.setInt(2, bookingGroupId != null ? bookingGroupId : bookingId);
+            deleteTickets.executeUpdate();
+            deleteTickets.close();
 
-                    // Insert into canceled_bookings
-                    PreparedStatement insertCancel = conn.prepareStatement(
-                        "INSERT INTO canceled_bookings (booking_id, user_id, flight_id, ticket_class, seat_number, purchase_date, total_fare, customer_first_name, customer_last_name, cancel_date) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    insertCancel.setInt(1, id);
-                    insertCancel.setInt(2, userId);
-                    insertCancel.setInt(3, flightId);
-                    insertCancel.setString(4, classType);
-                    insertCancel.setString(5, seatNumber);
-                    insertCancel.setDate(6, purchaseDate);
-                    insertCancel.setDouble(7, totalFare);
-                    insertCancel.setString(8, firstName);
-                    insertCancel.setString(9, lastName);
-                    insertCancel.setTimestamp(10, new Timestamp(System.currentTimeMillis()));
-                    insertCancel.executeUpdate();
-                    insertCancel.close();
-
-                    // Delete from bookings
-                    PreparedStatement deleteBooking = conn.prepareStatement("DELETE FROM bookings WHERE booking_id = ?");
-                    deleteBooking.setInt(1, id);
-                    deleteBooking.executeUpdate();
-                    deleteBooking.close();
-
-                    // Delete from ticket
-                    PreparedStatement deleteTicket = conn.prepareStatement(
-                        "DELETE FROM ticket WHERE user_id = ? AND flight_number = ?");
-                    deleteTicket.setInt(1, userId);
-                    deleteTicket.setString(2, rs.getString("flight_number"));
-                    deleteTicket.executeUpdate();
-                    deleteTicket.close();
-
-                    // Notify waitlist
-                    PreparedStatement waitlist = conn.prepareStatement(
-                        "SELECT user_id FROM waiting_list WHERE flight_id = ? AND notified = FALSE ORDER BY added_time ASC LIMIT 1");
-                    waitlist.setInt(1, flightId);
-                    ResultSet rsWait = waitlist.executeQuery();
-                    if (rsWait.next()) {
-                        int nextUserId = rsWait.getInt("user_id");
-                        PreparedStatement notify = conn.prepareStatement(
-                            "UPDATE waiting_list SET notified = TRUE WHERE user_id = ? AND flight_id = ?");
-                        notify.setInt(1, nextUserId);
-                        notify.setInt(2, flightId);
-                        notify.executeUpdate();
-                        notify.close();
-                    }
-                    rsWait.close();
-                    waitlist.close();
+            // Step 4: Notify next user on waitlist for each flight
+            for (int flightId : flightIdsToNotify) {
+                PreparedStatement waitlist = conn.prepareStatement(
+                    "SELECT user_id FROM waiting_list WHERE flight_id = ? AND notified = FALSE ORDER BY added_time ASC LIMIT 1");
+                waitlist.setInt(1, flightId);
+                ResultSet rsWait = waitlist.executeQuery();
+                if (rsWait.next()) {
+                    int nextUserId = rsWait.getInt("user_id");
+                    PreparedStatement notify = conn.prepareStatement(
+                        "UPDATE waiting_list SET notified = TRUE WHERE user_id = ? AND flight_id = ?");
+                    notify.setInt(1, nextUserId);
+                    notify.setInt(2, flightId);
+                    notify.executeUpdate();
+                    notify.close();
                 }
-                rs.close();
-                getInfo.close();
+                rsWait.close();
+                waitlist.close();
             }
 
             conn.close();
             request.getSession().setAttribute("message", "✅ Booking(s) cancelled.");
-
         } catch (Exception e) {
             e.printStackTrace();
             request.getSession().setAttribute("message", "❌ Error cancelling booking.");

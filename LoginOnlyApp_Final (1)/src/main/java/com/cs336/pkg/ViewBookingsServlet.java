@@ -36,11 +36,11 @@ public class ViewBookingsServlet extends HttpServlet {
                       "WHERE cb.user_id = ? " +
                       "ORDER BY cb.cancel_date DESC";
             } else {
-                sql = "SELECT t.*, b.booking_id, b.booking_group_id, f.from_airport, f.to_airport " +
-                      "FROM ticket t " +
-                      "JOIN bookings b ON t.user_id = b.user_id AND t.flight_number = (SELECT flight_number FROM flights WHERE flight_id = b.flight_id) " +
-                      "JOIN flights f ON t.flight_number = f.flight_number AND t.airline_code = f.airline " +
-                      "WHERE t.user_id = ? ";
+            	sql = "SELECT t.*, b.booking_id, b.booking_group_id, f.from_airport, f.to_airport " +
+            		      "FROM ticket t " +
+            		      "JOIN flights f ON t.flight_number = f.flight_number AND t.airline_code = f.airline " +
+            		      "JOIN bookings b ON b.user_id = t.user_id AND b.flight_id = f.flight_id AND b.booking_group_id = t.booking_group_id " +
+            		      "WHERE t.user_id = ? ";
 
                 if ("upcoming".equals(filter)) {
                     sql += "AND f.departure_date >= CURDATE() ";
@@ -48,7 +48,7 @@ public class ViewBookingsServlet extends HttpServlet {
                     sql += "AND f.departure_date < CURDATE() ";
                 }
 
-                sql += "ORDER BY f.departure_date ASC";
+                sql += "ORDER BY b.booking_group_id ASC, f.departure_date ASC, f.departure_time ASC";
             }
 
             PreparedStatement ps = conn.prepareStatement(sql);
@@ -60,9 +60,7 @@ public class ViewBookingsServlet extends HttpServlet {
             while (rs.next()) {
                 String groupKey = "canceled".equals(filter)
                         ? rs.getString("booking_id")
-                        : (rs.getString("booking_group_id") != null && !rs.getString("booking_group_id").isEmpty())
-                            ? rs.getString("booking_group_id")
-                            : rs.getString("ticket_id");
+                        : (rs.getString("booking_group_id") != null ? rs.getString("booking_group_id") : rs.getString("ticket_id"));
 
                 Map<String, String> flight = new HashMap<>();
 
@@ -111,16 +109,20 @@ public class ViewBookingsServlet extends HttpServlet {
                 bookingsList.add(bookingEntry);
             }
 
-            // Waitlist seat availability notifications
-            Map<Integer, Boolean> seatAvailableMap = new HashMap<>();
-            PreparedStatement psWaitlist = conn.prepareStatement("SELECT flight_id FROM waiting_list WHERE user_id = ?");
+            // Waitlist seat availability
+            Map<Integer, String> seatAvailableMap = new HashMap<>();
+            PreparedStatement psWaitlist = conn.prepareStatement(
+                "SELECT w.flight_id, f.flight_number FROM waiting_list w " +
+                "JOIN flights f ON w.flight_id = f.flight_id " +
+                "WHERE w.user_id = ?");
             psWaitlist.setInt(1, userId);
             ResultSet rsWaitlist = psWaitlist.executeQuery();
 
             while (rsWaitlist.next()) {
                 int flightId = rsWaitlist.getInt("flight_id");
+                String flightNumber = rsWaitlist.getString("flight_number");
                 if (db.flightHasSeatAvailable(flightId)) {
-                    seatAvailableMap.put(flightId, true);
+                    seatAvailableMap.put(flightId, flightNumber);
                 }
             }
 

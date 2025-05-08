@@ -19,13 +19,14 @@
     <!-- Ticket class selector -->
     <label>
       Ticket class:
-      <select name="ticketClass" required>
-        <option value="Economy">Economy</option>
-        <option value="Business">Business</option>
-        <option value="First">First</option>
-      </select>
+    <select name="ticketClass">
+    <option value="Economy">Economy</option>
+    <option value="Business">Business (+ $100)</option>
+    <option value="First">First (+ $200)</option>
+	</select>
     </label>
     <br><br>
+
 
     <!-- Outbound Flights -->
     <h3>Outbound Flights (<%= request.getAttribute("departureDate") %>)</h3>

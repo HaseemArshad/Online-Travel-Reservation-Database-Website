@@ -47,12 +47,14 @@
     <h2>Your Flight Bookings</h2>
 
     <%
-        Map<Integer, Boolean> seatAvailableMap = (Map<Integer, Boolean>) request.getAttribute("seatAvailableMap");
+        Map<Integer, String> seatAvailableMap = (Map<Integer, String>) request.getAttribute("seatAvailableMap");
         if (seatAvailableMap != null && !seatAvailableMap.isEmpty()) {
-            for (Integer flightId : seatAvailableMap.keySet()) {
+            for (Map.Entry<Integer, String> entry : seatAvailableMap.entrySet()) {
+                Integer flightId = entry.getKey();
+                String flightNumber = entry.getValue();
     %>
         <div class="seat-available">
-            A seat is now available for Flight ID: <%= flightId %>!
+            A seat is now available for Flight <%= flightNumber %>!
             <form action="bookFlight" method="post" style="display:inline;">
                 <input type="hidden" name="flightId" value="<%= flightId %>">
                 <input type="hidden" name="ticketClass" value="economy">
@@ -115,7 +117,7 @@
                 From: <%= f.get("from_airport") %> To: <%= f.get("to_airport") %> |
                 Departure: <%= f.get("departure_date") %> <%= f.get("departure_time") %> |
                 Arrival: <%= f.get("arrival_date") %> <%= f.get("arrival_time") %><br>
-				Class: <%= f.get("class") != null ? f.get("class") : f.get("ticket_class") %> |
+                Class: <%= f.get("class") != null ? f.get("class") : f.get("ticket_class") %> |
                 Seat: <%= f.get("seat_number") != null ? f.get("seat_number") : "N/A" %> |
                 Fare: $<%= f.get("total_fare") != null ? f.get("total_fare") : "N/A" %> |
                 Purchased On: <%= f.get("purchase_date") != null ? f.get("purchase_date") : "N/A" %><br><br>
@@ -123,12 +125,23 @@
 
             Passenger: <%= flights.get(0).get("customer_first_name") %> <%= flights.get(0).get("customer_last_name") %><br>
 
-            <% if ("upcoming".equals(currentFilter)) { %>
-                <form action="cancelBooking" method="post">
-                    <input type="hidden" name="bookingId" value="<%= flights.get(0).get("booking_id") %>">
-                    <input type="submit" value="Cancel Booking">
-                </form>
-            <% } %>
+            <%
+			    String ticketClass = flights.get(0).get("class");
+			    if (ticketClass == null) {
+			        ticketClass = flights.get(0).get("ticket_class");
+			    }
+			    boolean isEligibleToCancel = ticketClass != null &&
+			        (ticketClass.equalsIgnoreCase("first") || ticketClass.equalsIgnoreCase("business"));
+			
+			    if ("upcoming".equals(currentFilter) && isEligibleToCancel) {
+			%>
+			    <form action="cancelBooking" method="post">
+			        <input type="hidden" name="bookingId" value="<%= flights.get(0).get("booking_id") %>">
+			        <input type="submit" value="Cancel Booking">
+			    </form>
+			<% } else if ("upcoming".equals(currentFilter)) { %>
+			    <p style="color: gray; font-style: italic;">Only Business and First class tickets are eligible for cancellation.</p>
+			<% } %>
         </div>
     <%
                 }
