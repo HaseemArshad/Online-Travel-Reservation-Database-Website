@@ -123,7 +123,7 @@
                     }
                 }
             %>
-                User Ticket ID: <%= f.get("ticket_id") != null ? f.get("ticket_id") : "N/A" %><br>
+                User Ticket ID: <%= f.get("booking_id") != null ? f.get("booking_id") : "N/A" %><br>
                 Flight: <%= f.get("flight_number") %> (<%= f.get("airline_code") %>) |
                 From: <%= f.get("from_airport") %> To: <%= f.get("to_airport") %> |
                 Departure: <%= f.get("departure_date") %> <%= f.get("departure_time") %> |

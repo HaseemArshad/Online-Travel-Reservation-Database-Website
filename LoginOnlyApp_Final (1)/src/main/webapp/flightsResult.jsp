@@ -145,7 +145,7 @@
             for (Map<String, String> flight : departureFlights) {
     %>
         <div class="flight-card">
-            <strong><%= flight.get("airline") %></strong> |
+			<strong><%= flight.get("airline") %> - <%= flight.get("flight_number") %></strong>
             <%= flight.get("from_airport") %> -> <%= flight.get("to_airport") %><br>
             Departure: <%= flight.get("departure_date") %> at <%= flight.get("departure_time") %><br>
             Arrival: <%= flight.get("arrival_time") %><br>

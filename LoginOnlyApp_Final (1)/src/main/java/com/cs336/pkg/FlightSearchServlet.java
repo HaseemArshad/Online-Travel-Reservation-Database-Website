@@ -64,6 +64,7 @@ public class FlightSearchServlet extends HttpServlet {
                 Map<String, String> flight = new HashMap<>();
                 flight.put("flight_id", rs.getString("flight_id"));
                 flight.put("airline", rs.getString("airline"));
+                flight.put("flight_number", rs.getString("flight_number"));
                 flight.put("from_airport", rs.getString("from_airport"));
                 flight.put("to_airport", rs.getString("to_airport"));
                 flight.put("departure_date", rs.getString("departure_date"));

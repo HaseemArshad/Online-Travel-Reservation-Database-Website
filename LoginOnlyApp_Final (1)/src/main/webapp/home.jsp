@@ -20,7 +20,7 @@
 
     if (username == null) {
 %>
-    <h2>You’re not logged in. <a href="login.jsp">Login</a></h2>
+    <h2>You are not logged in. <a href="login.jsp">Login</a></h2>
 <%
         return;
     }
