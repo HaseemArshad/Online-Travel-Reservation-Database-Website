@@ -112,37 +112,48 @@
                 if (flights != null && !flights.isEmpty()) {
     %>
         <div class="booking-card">
-            <% for (Map<String, String> f : flights) { %>
-    				User Ticket ID: <%= f.get("ticket_id") != null ? f.get("ticket_id") : "N/A" %><br>
-    				Flight: <%= f.get("flight_number") %> (<%= f.get("airline_code") %>) |
-				    From: <%= f.get("from_airport") %> To: <%= f.get("to_airport") %> |
-				    Departure: <%= f.get("departure_date") %> <%= f.get("departure_time") %> |
-				    Arrival: <%= f.get("arrival_date") %> <%= f.get("arrival_time") %><br>
-				    Class: <%= f.get("class") != null ? f.get("class") : f.get("ticket_class") %> |
-				    Seat: <%= f.get("seat_number") != null ? f.get("seat_number") : "N/A" %> |
-				    Fare: $<%= f.get("total_fare") != null ? f.get("total_fare") : "N/A" %> |
-				    Purchased On: <%= f.get("purchase_date") != null ? f.get("purchase_date") : "N/A" %><br><br>
-				<% } %>
+            <% for (Map<String, String> f : flights) { 
+                String travelType = "N/A";
+                if (f.containsKey("is_international") && f.get("is_international") != null) {
+                    String internationalFlag = f.get("is_international").trim();
+                    if ("1".equals(internationalFlag)) {
+                        travelType = "International";
+                    } else if ("0".equals(internationalFlag)) {
+                        travelType = "Domestic";
+                    }
+                }
+            %>
+                User Ticket ID: <%= f.get("ticket_id") != null ? f.get("ticket_id") : "N/A" %><br>
+                Flight: <%= f.get("flight_number") %> (<%= f.get("airline_code") %>) |
+                From: <%= f.get("from_airport") %> To: <%= f.get("to_airport") %> |
+                Departure: <%= f.get("departure_date") %> <%= f.get("departure_time") %> |
+                Arrival: <%= f.get("arrival_date") %> <%= f.get("arrival_time") %><br>
+                Class: <%= f.get("class") != null ? f.get("class") : f.get("ticket_class") %> |
+                Seat: <%= f.get("seat_number") != null ? f.get("seat_number") : "N/A" %> |
+                Fare: $<%= f.get("total_fare") != null ? f.get("total_fare") : "N/A" %> |
+                Purchased On: <%= f.get("purchase_date") != null ? f.get("purchase_date") : "N/A" %><br>
+                Type: <%= travelType %><br><br>
+            <% } %>
 
             Passenger: <%= flights.get(0).get("customer_first_name") %> <%= flights.get(0).get("customer_last_name") %><br>
 
             <%
-			    String ticketClass = flights.get(0).get("class");
-			    if (ticketClass == null) {
-			        ticketClass = flights.get(0).get("ticket_class");
-			    }
-			    boolean isEligibleToCancel = ticketClass != null &&
-			        (ticketClass.equalsIgnoreCase("first") || ticketClass.equalsIgnoreCase("business"));
-			
-			    if ("upcoming".equals(currentFilter) && isEligibleToCancel) {
-			%>
-			    <form action="cancelBooking" method="post">
-			        <input type="hidden" name="bookingId" value="<%= flights.get(0).get("booking_id") %>">
-			        <input type="submit" value="Cancel Booking">
-			    </form>
-			<% } else if ("upcoming".equals(currentFilter)) { %>
-			    <p style="color: gray; font-style: italic;">Only Business and First class tickets are eligible for cancellation.</p>
-			<% } %>
+                String ticketClass = flights.get(0).get("class");
+                if (ticketClass == null) {
+                    ticketClass = flights.get(0).get("ticket_class");
+                }
+                boolean isEligibleToCancel = ticketClass != null &&
+                    (ticketClass.equalsIgnoreCase("first") || ticketClass.equalsIgnoreCase("business"));
+
+                if ("upcoming".equals(currentFilter) && isEligibleToCancel) {
+            %>
+                <form action="cancelBooking" method="post">
+                    <input type="hidden" name="bookingId" value="<%= flights.get(0).get("booking_id") %>">
+                    <input type="submit" value="Cancel Booking">
+                </form>
+            <% } else if ("upcoming".equals(currentFilter)) { %>
+                <p style="color: gray; font-style: italic;">Only Business and First class tickets can be cancelled for free.</p>
+            <% } %>
         </div>
     <%
                 }

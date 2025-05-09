@@ -29,18 +29,22 @@ public class ViewBookingsServlet extends HttpServlet {
             if ("canceled".equals(filter)) {
                 sql = "SELECT cb.booking_id, cb.cancel_date, cb.ticket_class, cb.seat_number, cb.purchase_date, " +
                       "cb.total_fare, cb.customer_first_name, cb.customer_last_name, " +
-                      "f.flight_number, f.airline, f.from_airport, f.to_airport, " +
-                      "f.departure_date, f.departure_time, f.arrival_date, f.arrival_time " +
+                      "f.flight_number, f.airline, f.from_airport, f.to_airport, f.is_international, " +
+                      "f.departure_date, f.departure_time, f.arrival_date, f.arrival_time, " +
+                      "t.ticket_id " +
                       "FROM canceled_bookings cb " +
                       "JOIN flights f ON cb.flight_id = f.flight_id " +
+                      "LEFT JOIN ticket t ON t.flight_number = f.flight_number AND t.airline_code = f.airline " +
+                      "AND t.purchase_date = cb.purchase_date AND t.customer_first_name = cb.customer_first_name " +
+                      "AND t.customer_last_name = cb.customer_last_name " +
                       "WHERE cb.user_id = ? " +
                       "ORDER BY cb.cancel_date DESC";
             } else {
-            	sql = "SELECT t.*, b.booking_id, b.booking_group_id, f.from_airport, f.to_airport " +
-            		      "FROM ticket t " +
-            		      "JOIN flights f ON t.flight_number = f.flight_number AND t.airline_code = f.airline " +
-            		      "JOIN bookings b ON b.user_id = t.user_id AND b.flight_id = f.flight_id AND b.booking_group_id = t.booking_group_id " +
-            		      "WHERE t.user_id = ? ";
+                sql = "SELECT t.*, b.booking_id, b.booking_group_id, f.from_airport, f.to_airport, f.is_international " +
+                      "FROM ticket t " +
+                      "JOIN flights f ON t.flight_number = f.flight_number AND t.airline_code = f.airline " +
+                      "JOIN bookings b ON b.user_id = t.user_id AND b.flight_id = f.flight_id AND b.booking_group_id = t.booking_group_id " +
+                      "WHERE t.user_id = ? ";
 
                 if ("upcoming".equals(filter)) {
                     sql += "AND f.departure_date >= CURDATE() ";
@@ -81,6 +85,8 @@ public class ViewBookingsServlet extends HttpServlet {
                     flight.put("customer_last_name", rs.getString("customer_last_name"));
                     flight.put("total_fare", rs.getString("total_fare"));
                     flight.put("cancel_date", rs.getString("cancel_date"));
+                    flight.put("is_international", rs.getString("is_international"));
+                    flight.put("ticket_id", rs.getString("ticket_id"));
                 } else {
                     flight.put("ticket_id", rs.getString("ticket_id"));
                     flight.put("flight_number", rs.getString("flight_number"));
@@ -98,6 +104,7 @@ public class ViewBookingsServlet extends HttpServlet {
                     flight.put("total_fare", rs.getString("total_fare"));
                     flight.put("purchase_date", rs.getString("purchase_date"));
                     flight.put("booking_id", rs.getString("booking_id"));
+                    flight.put("is_international", rs.getString("is_international"));
                 }
 
                 groupedFlights.computeIfAbsent(groupKey, k -> new ArrayList<>()).add(flight);
