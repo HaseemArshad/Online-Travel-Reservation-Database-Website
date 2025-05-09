@@ -2,29 +2,14 @@
 <%@ page import="java.sql.*" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%@ page import="com.cs336.pkg.ApplicationDB" %>
+<!DOCTYPE html>
 <html>
 <head>
     <title>Confirm Booking</title>
-    <script>
-        let countdown = 300;
-        function startTimer() {
-            const timerDisplay = document.getElementById("timer");
-            const interval = setInterval(() => {
-                let minutes = Math.floor(countdown / 60);
-                let seconds = countdown % 60;
-                timerDisplay.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-                if (--countdown < 0) {
-                    clearInterval(interval);
-                    document.getElementById("expired").style.display = "block";
-                    document.getElementById("bookingForm").style.display = "none";
-                }
-            }, 1000);
-        }
-        window.onload = startTimer;
-    </script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
+<div class="container">
 <%
     String flightId = request.getParameter("flightId");
     String ticketClass = request.getParameter("ticketClass");
@@ -65,37 +50,32 @@
 
             DecimalFormat df = new DecimalFormat("0.00");
 %>
+    <h2>Booking Confirmation</h2>
 
-    <h3>Flight Summary</h3>
-    <p><strong>Airline:</strong> <%= airline %></p>
-    <p><strong>From:</strong> <%= from %></p>
-    <p><strong>To:</strong> <%= to %></p>
-    <p><strong>Departure:</strong> <%= date %> at <%= departure %></p>
-    <p><strong>Arrival:</strong> <%= arrival %></p>
-
-<% if (ticketClass != null) { %>
-    <h3>Payment Summary</h3>
-    <p>Base Price: $<%= df.format(basePrice) %></p>
-    <p>Class Fee: $<%= df.format(adjustment) %></p>
-    <p>Booking Fee (10%): $<%= df.format(fee) %></p>
-    <p><strong>Total: $<%= df.format(total) %></strong></p>
-
-    <div id="expired" style="color:red; display:none; font-weight:bold;">
-        Reservation expired. Please start again.
+    <div class="flight-summary">
+        <h3>Flight Summary</h3>
+        <p><strong>Airline:</strong> <%= airline %></p>
+        <p><strong>From:</strong> <%= from %>  <strong>To:</strong> <%= to %></p>
+        <p><strong>Departure:</strong> <%= date %> at <%= departure %></p>
+        <p><strong>Arrival:</strong> <%= arrival %></p>
     </div>
 
-    <div id="bookingForm">
-        <form action="bookFlight" method="post">
-            <input type="hidden" name="flightId" value="<%= flightId %>">
-            <input type="hidden" name="ticketClass" value="<%= ticketClass %>">
-            <input type="hidden" name="price" value="<%= df.format(total) %>">
-            <input type="hidden" name="firstName" value="<%= firstName %>">
-            <input type="hidden" name="lastName" value="<%= lastName %>">
-            <input type="submit" value="Confirm and Pay">
-        </form>
+    <div class="flight-summary">
+        <h3>Payment Summary</h3>
+        <p>Base Price: $<%= df.format(basePrice) %></p>
+        <p>Class Fee: $<%= df.format(adjustment) %></p>
+        <p>Booking Fee (10%): $<%= df.format(fee) %></p>
+        <p><strong>Total: $<%= df.format(total) %></strong></p>
     </div>
-<% } %>
 
+    <form action="bookFlight" method="post">
+        <input type="hidden" name="flightId" value="<%= flightId %>">
+        <input type="hidden" name="ticketClass" value="<%= ticketClass %>">
+        <input type="hidden" name="price" value="<%= df.format(total) %>">
+        <input type="hidden" name="firstName" value="<%= firstName %>">
+        <input type="hidden" name="lastName" value="<%= lastName %>">
+        <input type="submit" value="Confirm and Pay">
+    </form>
 <%
         } else {
 %>
@@ -107,6 +87,6 @@
         con.close();
     }
 %>
-
+</div>
 </body>
 </html>
