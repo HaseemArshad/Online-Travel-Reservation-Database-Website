@@ -88,3 +88,24 @@ a {
 a:hover {
     text-decoration: underline;
 }
+
+/* Flight Summary Cards */
+.flight-summary {
+    border: 1px solid #cce0ff;
+    border-left: 6px solid #007bff;
+    background-color: #e9f4ff;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 25px;
+    transition: box-shadow 0.3s ease;
+}
+
+.flight-summary:hover {
+    box-shadow: 0 0 10px rgba(0, 123, 255, 0.15);
+}
+
+.flight-summary strong {
+    color: #333;
+    display: inline-block;
+    margin-right: 5px;
+}
