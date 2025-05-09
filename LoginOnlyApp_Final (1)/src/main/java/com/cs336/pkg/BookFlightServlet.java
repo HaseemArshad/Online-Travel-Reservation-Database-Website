@@ -17,6 +17,8 @@ public class BookFlightServlet extends HttpServlet {
         String customerFirst = (String) session.getAttribute("firstName");
         String customerLast = (String) session.getAttribute("lastName");
         String ticketClass = request.getParameter("ticketClass");
+        String tripType = request.getParameter("tripType");
+        String confirmed = request.getParameter("confirmed");
         String fromWaitlist = request.getParameter("fromWaitlist");
 
         Set<String> flightIdSet = new LinkedHashSet<>(Arrays.asList(
@@ -25,6 +27,19 @@ public class BookFlightServlet extends HttpServlet {
                 request.getParameter("flightId2")
         ));
         flightIdSet.removeIf(id -> id == null || id.isEmpty());
+
+        if ("roundtrip".equalsIgnoreCase(tripType) && confirmed == null) {
+            try (Connection conn = new ApplicationDB().getConnection()) {
+                Iterator<String> it = flightIdSet.iterator();
+                if (it.hasNext()) request.setAttribute("flight1", fetchFlightMap(conn, Integer.parseInt(it.next())));
+                if (it.hasNext()) request.setAttribute("flight2", fetchFlightMap(conn, Integer.parseInt(it.next())));
+                request.setAttribute("ticketClass", ticketClass);
+                request.getRequestDispatcher("confirmRoundTrip.jsp").forward(request, response);
+                return;
+            } catch (Exception e) {
+                throw new ServletException(e);
+            }
+        }
 
         if (userId == null || customerFirst == null || customerLast == null || ticketClass == null) {
             request.setAttribute("message", "❌ Missing booking information.");
@@ -54,9 +69,7 @@ public class BookFlightServlet extends HttpServlet {
                     int capacity = rsFlight.getInt("capacity");
                     double basePrice = rsFlight.getDouble("price");
 
-                    double adjustment = 0;
-                    if ("Business".equalsIgnoreCase(ticketClass)) adjustment = 100.0;
-                    else if ("First".equalsIgnoreCase(ticketClass)) adjustment = 200.0;
+                    double adjustment = "Business".equalsIgnoreCase(ticketClass) ? 100 : "First".equalsIgnoreCase(ticketClass) ? 200 : 0;
                     double totalFare = basePrice + adjustment;
                     double bookingFee = totalFare * 0.10;
 
@@ -75,31 +88,24 @@ public class BookFlightServlet extends HttpServlet {
                         waitStmt.executeUpdate();
                         waitStmt.close();
 
-                        messageBuilder.append("⚠️ Flight ").append(flightNumber)
-                                .append(" is full. You’ve been added to the waitlist.<br>");
+                        messageBuilder.append("⚠️ Flight ").append(flightNumber).append(" is full. You've been waitlisted.<br>");
                         continue;
                     }
 
-                    // Insert booking
                     PreparedStatement bookStmt = conn.prepareStatement(
                             "INSERT INTO bookings (user_id, flight_id, ticket_class, booking_group_id) VALUES (?, ?, ?, ?)",
                             Statement.RETURN_GENERATED_KEYS);
                     bookStmt.setInt(1, userId);
                     bookStmt.setInt(2, flightId);
                     bookStmt.setString(3, ticketClass);
-                    if (bookingGroupId == null) {
-                        bookStmt.setNull(4, Types.INTEGER);
-                    } else {
-                        bookStmt.setInt(4, bookingGroupId);
-                    }
+                    if (bookingGroupId == null) bookStmt.setNull(4, Types.INTEGER);
+                    else bookStmt.setInt(4, bookingGroupId);
                     bookStmt.executeUpdate();
 
                     ResultSet generatedKeys = bookStmt.getGeneratedKeys();
                     if (generatedKeys.next() && bookingGroupId == null) {
                         int newBookingId = generatedKeys.getInt(1);
                         bookingGroupId = newBookingId;
-
-                        // Update the first booking to assign group ID
                         PreparedStatement updateStmt = conn.prepareStatement(
                                 "UPDATE bookings SET booking_group_id = ? WHERE booking_id = ?");
                         updateStmt.setInt(1, newBookingId);
@@ -109,7 +115,6 @@ public class BookFlightServlet extends HttpServlet {
                     }
                     bookStmt.close();
 
-                    // Assign seat number
                     PreparedStatement seatStmt = conn.prepareStatement(
                             "SELECT COUNT(*) AS seat_count FROM ticket WHERE flight_number = ? AND airline_code = ?");
                     seatStmt.setString(1, flightNumber);
@@ -156,10 +161,7 @@ public class BookFlightServlet extends HttpServlet {
                 flightStmt.close();
             }
 
-            conn.close();
-            request.setAttribute("message", messageBuilder.length() > 0
-                    ? messageBuilder.toString()
-                    : "✅ Booking complete.");
+            request.setAttribute("message", messageBuilder.length() > 0 ? messageBuilder.toString() : "✅ Booking complete.");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -167,5 +169,30 @@ public class BookFlightServlet extends HttpServlet {
         }
 
         request.getRequestDispatcher("bookingConfirmation.jsp").forward(request, response);
+    }
+
+    private Map<String,String> fetchFlightMap(Connection conn, int flightId) throws SQLException {
+        String sql = "SELECT *, TIMEDIFF(arrival_time, departure_time) AS duration FROM flights WHERE flight_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, flightId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    Map<String,String> f = new HashMap<>();
+                    f.put("flight_id",      rs.getString("flight_id"));
+                    f.put("airline",        rs.getString("airline"));
+                    f.put("from_airport",   rs.getString("from_airport"));
+                    f.put("to_airport",     rs.getString("to_airport"));
+                    f.put("departure_date", rs.getString("departure_date"));
+                    f.put("departure_time", rs.getString("departure_time"));
+                    f.put("arrival_date",   rs.getString("arrival_date"));
+                    f.put("arrival_time",   rs.getString("arrival_time"));
+                    f.put("price",          rs.getString("price"));
+                    f.put("stops",          rs.getString("stops"));
+                    f.put("duration",       rs.getString("duration"));
+                    return f;
+                }
+            }
+        }
+        return Collections.emptyMap();
     }
 }
