@@ -34,6 +34,14 @@
       <option value="asc"  <%= "asc".equals(request.getAttribute("sortOrder"))  ? "selected" : "" %>>Asc</option>
       <option value="desc" <%= "desc".equals(request.getAttribute("sortOrder")) ? "selected" : "" %>>Desc</option>
     </select>
+    
+    
+  <label>
+    <input type="checkbox" name="flexibleDates" value="true"
+      <%= "true".equalsIgnoreCase(request.getParameter("flexibleDates")) ? "checked" : "" %> />
+    Flexible Dates (±3 days)
+  </label>
+  <br><br>
 
     <button type="submit">Apply Sort</button>
   </form>

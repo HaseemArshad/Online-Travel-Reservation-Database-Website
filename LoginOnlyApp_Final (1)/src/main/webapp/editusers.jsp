@@ -14,7 +14,6 @@
 
     String message = null;
 
-    // ✅ STEP 1: Handle update BEFORE querying users
     if ("POST".equalsIgnoreCase(request.getMethod())) {
         String userId = request.getParameter("id");
         String username = request.getParameter("username");
@@ -39,7 +38,6 @@
         }
     }
 
-    // ✅ STEP 2: Fetch users AFTER any update
     ResultSet users;
     if (searchQuery != null && !searchQuery.trim().isEmpty()) {
         String query = "SELECT * FROM users WHERE " + searchBy + " LIKE ?";

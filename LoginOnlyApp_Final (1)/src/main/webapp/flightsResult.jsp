@@ -62,7 +62,7 @@
             <label>
                 <input type="checkbox" name="flexibleDates" value="true"
                     <%= "true".equals(request.getParameter("flexibleDates")) ? "checked" : "" %>>
-                Include +/- 2 days (Flexible Dates)
+                Include +/- 3 days (Flexible Dates)
             </label>
 
             <input type="submit" value="Sort">

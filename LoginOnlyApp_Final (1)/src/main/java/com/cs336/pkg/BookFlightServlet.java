@@ -42,7 +42,7 @@ public class BookFlightServlet extends HttpServlet {
         }
 
         if (userId == null || customerFirst == null || customerLast == null || ticketClass == null) {
-            request.setAttribute("message", "❌ Missing booking information.");
+            request.setAttribute("message", " Missing booking information.");
             request.getRequestDispatcher("bookingConfirmation.jsp").forward(request, response);
             return;
         }
@@ -88,7 +88,7 @@ public class BookFlightServlet extends HttpServlet {
                         waitStmt.executeUpdate();
                         waitStmt.close();
 
-                        messageBuilder.append("⚠️ Flight ").append(flightNumber).append(" is full. You've been waitlisted.<br>");
+                        messageBuilder.append("Flight ").append(flightNumber).append(" is full. You've been waitlisted.<br>");
                         continue;
                     }
 
@@ -154,18 +154,18 @@ public class BookFlightServlet extends HttpServlet {
                         removeStmt.close();
                     }
 
-                    messageBuilder.append("✅ Flight ").append(flightNumber).append(" booked successfully.<br>");
+                    messageBuilder.append("Flight ").append(flightNumber).append(" booked successfully.<br>");
                 }
 
                 rsFlight.close();
                 flightStmt.close();
             }
 
-            request.setAttribute("message", messageBuilder.length() > 0 ? messageBuilder.toString() : "✅ Booking complete.");
+            request.setAttribute("message", messageBuilder.length() > 0 ? messageBuilder.toString() : "Booking complete.");
 
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("message", "⚠️ Booking error.");
+            request.setAttribute("message", "Booking error.");
         }
 
         request.getRequestDispatcher("bookingConfirmation.jsp").forward(request, response);

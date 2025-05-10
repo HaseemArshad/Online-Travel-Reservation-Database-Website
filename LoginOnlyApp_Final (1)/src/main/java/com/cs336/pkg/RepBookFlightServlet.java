@@ -31,7 +31,7 @@ public class RepBookFlightServlet extends HttpServlet {
             rs = ps.executeQuery();
 
             if (!rs.next()) {
-                request.setAttribute("message", "❌ Error: User not found.");
+                request.setAttribute("message", " Error: User not found.");
                 request.getRequestDispatcher("repBookFlight.jsp").forward(request, response);
                 return;
             }
@@ -47,7 +47,7 @@ public class RepBookFlightServlet extends HttpServlet {
             rs = ps.executeQuery();
 
             if (!rs.next()) {
-                request.setAttribute("message", "❌ Error: Flight number " + flightNumber + " does not exist.");
+                request.setAttribute("message", " Error: Flight number " + flightNumber + " does not exist.");
                 request.getRequestDispatcher("repBookFlight.jsp").forward(request, response);
                 return;
             }
@@ -122,7 +122,7 @@ public class RepBookFlightServlet extends HttpServlet {
             ps.executeUpdate();
             ps.close();
 
-            request.setAttribute("message", "✅ Successfully booked flight " + flightNumber + " for user " + username);
+            request.setAttribute("message", " Successfully booked flight " + flightNumber + " for user " + username);
             request.getRequestDispatcher("repBookFlight.jsp").forward(request, response);
 
         } catch (Exception e) {

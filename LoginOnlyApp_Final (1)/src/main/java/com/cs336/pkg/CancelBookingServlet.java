@@ -12,7 +12,7 @@ public class CancelBookingServlet extends HttpServlet {
         String bookingIdStr = request.getParameter("bookingId");
 
         if (bookingIdStr == null) {
-            request.getSession().setAttribute("message", "❌ No booking selected for cancellation.");
+            request.getSession().setAttribute("message", " No booking selected for cancellation.");
             response.sendRedirect("viewBookings?filter=upcoming");
             return;
         }
@@ -36,7 +36,7 @@ public class CancelBookingServlet extends HttpServlet {
                 userId = rsGroup.getInt("user_id");
             } else {
                 conn.close();
-                request.getSession().setAttribute("message", "❌ Booking not found.");
+                request.getSession().setAttribute("message", " Booking not found.");
                 response.sendRedirect("viewBookings?filter=upcoming");
                 return;
             }
@@ -67,7 +67,7 @@ public class CancelBookingServlet extends HttpServlet {
 
                 if ("economy".equalsIgnoreCase(classType)) {
                     conn.close();
-                    request.getSession().setAttribute("message", "❌ Only Business and First class bookings can be canceled.");
+                    request.getSession().setAttribute("message", " Only Business and First class bookings can be canceled.");
                     response.sendRedirect("viewBookings?filter=upcoming");
                     return;
                 }
@@ -127,16 +127,16 @@ public class CancelBookingServlet extends HttpServlet {
             }
 
             conn.close();
-            request.getSession().setAttribute("message", "✅ Booking(s) cancelled.");
+            request.getSession().setAttribute("message", " Booking(s) cancelled.");
         } catch (Exception e) {
             e.printStackTrace();
-            request.getSession().setAttribute("message", "❌ Error cancelling booking.");
+            request.getSession().setAttribute("message", " Error cancelling booking.");
         }
 
         response.sendRedirect("viewBookings?filter=upcoming");
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.getWriter().println("❌ Use POST to cancel a booking.");
+        response.getWriter().println(" Use POST to cancel a booking.");
     }
 }
