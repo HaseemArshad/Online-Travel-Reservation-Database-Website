@@ -19,7 +19,7 @@
         try {
             int uid = Integer.parseInt(deleteId);
 
-            // Step 1: Delete from child tables first (in safe order)
+            
             PreparedStatement ps1 = con.prepareStatement("DELETE FROM waiting_list WHERE user_id = ?");
             ps1.setInt(1, uid);
             ps1.executeUpdate();

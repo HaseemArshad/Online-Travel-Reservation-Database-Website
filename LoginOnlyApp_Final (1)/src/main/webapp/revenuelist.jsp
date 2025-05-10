@@ -137,7 +137,7 @@
         <% } rs.close(); %>
     </table>
 
-    <%-- Customer Search with full name match --%>
+    <%-- Customer Search --%>
     <% } else if ("customer".equals(searchBy) &&
                   username != null && fullName != null &&
                   !username.trim().isEmpty() && !fullName.trim().isEmpty()) {

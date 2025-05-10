@@ -71,7 +71,7 @@
             }
         }
 
-        // ✅ Get all distinct airport codes
+        
         Set<String> airportSet = new TreeSet<>();
         PreparedStatement psAirports = con.prepareStatement(
             "SELECT DISTINCT from_airport AS airport FROM flights " +
