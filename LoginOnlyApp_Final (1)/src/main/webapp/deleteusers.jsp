@@ -17,14 +17,36 @@
     if ("POST".equalsIgnoreCase(request.getMethod()) && request.getParameter("deleteId") != null) {
         String deleteId = request.getParameter("deleteId");
         try {
-            PreparedStatement deleteStmt = con.prepareStatement("DELETE FROM users WHERE id = ?");
-            deleteStmt.setInt(1, Integer.parseInt(deleteId));
-            int deleted = deleteStmt.executeUpdate();
+            int uid = Integer.parseInt(deleteId);
+
+            // Step 1: Delete from child tables first (in safe order)
+            PreparedStatement ps1 = con.prepareStatement("DELETE FROM waiting_list WHERE user_id = ?");
+            ps1.setInt(1, uid);
+            ps1.executeUpdate();
+
+            PreparedStatement ps2 = con.prepareStatement("DELETE FROM canceled_bookings WHERE user_id = ?");
+            ps2.setInt(1, uid);
+            ps2.executeUpdate();
+
+            PreparedStatement ps3 = con.prepareStatement("DELETE FROM ticket WHERE user_id = ?");
+            ps3.setInt(1, uid);
+            ps3.executeUpdate();
+
+            PreparedStatement ps4 = con.prepareStatement("DELETE FROM bookings WHERE user_id = ?");
+            ps4.setInt(1, uid);
+            ps4.executeUpdate();
+
+            // Step 2: Delete from users table
+            PreparedStatement psUser = con.prepareStatement("DELETE FROM users WHERE id = ?");
+            psUser.setInt(1, uid);
+            int deleted = psUser.executeUpdate();
+
             message = (deleted > 0) ? "User deleted successfully." : "User not found or could not be deleted.";
         } catch (Exception e) {
             message = "Error deleting user: " + e.getMessage();
         }
     }
+
 
     ResultSet users;
     if (searchQuery != null && !searchQuery.trim().isEmpty()) {
