@@ -1,7 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.Map" %>
 <%
-    // pulled from request attributes by servlet, use f1/f2 to avoid collision with implicit "out"
     Map<String,String> f1 = (Map<String,String>)request.getAttribute("flight1");
     Map<String,String> f2 = (Map<String,String>)request.getAttribute("flight2");
     String ticketClass   = (String)request.getAttribute("ticketClass");
